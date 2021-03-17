@@ -126,7 +126,8 @@ class Tomodachi(commands.AutoShardedBot):
             self.loop.create_task(self.pg.store_guild(guild.id))
 
         self.support_guild = support_guild = await self.fetch_guild(config.SUPPORT_GUILD_ID)
-        self.traceback_log = discord.utils.get(support_guild.channels, name="traceback")
+        support_channels = await support_guild.fetch_channels()
+        self.traceback_log = discord.utils.get(support_channels, name="traceback")
 
         await self.icon.setup(support_guild.emojis)
         await AniList.setup(self.session)
