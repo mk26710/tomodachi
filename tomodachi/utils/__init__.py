@@ -5,7 +5,6 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from .apis import *
-from .decos import *
 from .factories import *
 from .pgsql import pg
 from .text import *
