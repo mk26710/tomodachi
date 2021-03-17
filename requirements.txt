@@ -7,7 +7,7 @@ humanize>=3.2.0
 discord-flags~=2.1.1
 idna==2.5
 gTTS==2.2.2
-aiohttp[speedups]==3.7.4
+aiohttp[speedups]>=3.7.4
 Pillow~=8.1.1
 more-itertools~=8.7.0
 fastapi==0.63.0
