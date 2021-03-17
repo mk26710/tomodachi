@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Optional, Union
 
@@ -53,7 +52,6 @@ class Tomodachi(commands.AutoShardedBot):
 
         self.session = aiohttp.ClientSession()
 
-        self.__once_ready_ = asyncio.Event()
         self.loop.create_task(self.once_ready())
 
         # Fetch custom prefixes and blacklisted users
@@ -120,12 +118,8 @@ class Tomodachi(commands.AutoShardedBot):
 
         self.blacklist = tuple(r["user_id"] for r in records)
 
-    async def on_ready(self):
-        if not self.__once_ready_.is_set():
-            self.__once_ready_.set()
-
     async def once_ready(self):
-        await self.__once_ready_.wait()
+        await self.wait_until_ready()
 
         for guild in self.guilds:
             self.loop.create_task(self.pg.store_guild(guild.id))
