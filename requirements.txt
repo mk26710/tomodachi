@@ -13,3 +13,4 @@ more-itertools~=8.7.0
 fastapi==0.63.0
 uvicorn~=0.13.4
 pydantic~=1.8.1
+no-blocking-io==0.0.3
