@@ -1,0 +1,8 @@
+[project]
+name = "tomodachi-bot"
+version = "0.0.2"
+python = "^3.9"
+
+
+[tool.black]
+line-length = 120
