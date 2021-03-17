@@ -63,8 +63,8 @@ class ErrorHandler(commands.Cog):
             e.add_field(name="Author", value=f"{ctx.author} (`{ctx.author.id}`)")
             e.add_field(name="Guild", value="{}".format(f"{g.name} (`{g.id}`)" if (g := ctx.guild) else "None"))
 
-            if u := self.bot.get_user(self.bot.owner_id):
-                await u.send(embed=e, content=f"```\n{tb[0:2000]}\n```")
+            if log_c := self.bot.traceback_log:
+                await log_c.send(embed=e, content=f"```\n{tb[0:2000]}\n```")
 
 
 def setup(bot):
