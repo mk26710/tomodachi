@@ -46,6 +46,7 @@ class Tomodachi(commands.AutoShardedBot):
         self.icon = Icons()
         # Faster access to support guild data
         self.support_guild: Optional[discord.Guild] = None
+        self.traceback_log: Optional[discord.TextChannel] = None
 
         # Global rate limit cooldowns mapping
         self.global_rate_limit = commands.CooldownMapping.from_cooldown(10, 10, commands.BucketType.user)
@@ -125,6 +126,8 @@ class Tomodachi(commands.AutoShardedBot):
             self.loop.create_task(self.pg.store_guild(guild.id))
 
         self.support_guild = support_guild = await self.fetch_guild(config.SUPPORT_GUILD_ID)
+        self.traceback_log = discord.utils.get(support_guild.channels, name="traceback")
+
         await self.icon.setup(support_guild.emojis)
         await AniList.setup(self.session)
 
