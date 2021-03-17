@@ -1,0 +1,14 @@
+asyncpg~=0.22.0
+aioredis~=1.3.1
+discord.py@git+https://github.com/Rapptz/discord.py@master
+discord-ext-menus@git+https://github.com/Rapptz/discord-ext-menus@master
+jishaku>=1.20.0.220
+humanize>=3.2.0
+discord-flags~=2.1.1
+idna==2.5
+gTTS==2.2.2
+aiohttp[speedups]==3.7.4
+Pillow~=8.1.1
+more-itertools~=8.7.0
+fastapi==0.63.0
+uvicorn~=0.13.4
