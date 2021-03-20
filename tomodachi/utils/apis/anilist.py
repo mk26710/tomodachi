@@ -88,7 +88,8 @@ class AniMedia:
     @property
     def description(self):
         # absolute genius move here
-        return self._description.replace("\n", "").replace("<br>", "\n")
+        desc = self._description or ""
+        return desc.replace("\n", "").replace("<br>", "\n")
 
     @property
     def start_date(self):
