@@ -10,6 +10,7 @@ from typing import Union
 
 import discord
 import humanize
+from aiohttp import ClientResponseError
 from discord.ext import commands, flags
 
 from tomodachi.core import Tomodachi, TomodachiContext
@@ -128,6 +129,35 @@ class Info(commands.Cog):
         e.set_image(url=activity.album_cover_url)
 
         await ctx.send(embed=e)
+
+    @commands.cooldown(1, 3.0, commands.BucketType.user)
+    @commands.command()
+    async def pypi(self, ctx: TomodachiContext, pkg: str = None):
+        """Lookup for a package on PyPI"""
+        if not pkg:
+            return await ctx.send(":x: You have to provide a package name.")
+
+        url = f"https://pypi.org/pypi/{pkg}/json"
+        async with self.bot.session.get(url) as resp:
+            try:
+                resp.raise_for_status()
+            except ClientResponseError:
+                return await ctx.send(f":x: Package `{pkg}` not found")
+            else:
+                data = await resp.json()
+                info = data["info"]
+
+        embed = discord.Embed(
+            description=info["summary"],
+            title=f"{pkg} {info['version']}",
+            url=info["package_url"],
+        )
+
+        embed.add_field(name="Author", value=info["author"] or "not provided", inline=False)
+        embed.add_field(name="Author Email", value=info["author_email"] or "not provided", inline=False)
+        embed.add_field(name="License", value=info["license"] or "not provided", inline=False)
+
+        await ctx.send(embed=embed)
 
 
 def setup(bot):
