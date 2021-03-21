@@ -13,7 +13,7 @@ __all__ = ["make_progress_bar", "HUMAN_READABLE_FLAGS", "HUMANIZED_ACTIVITY"]
 
 _HUMAN_READABLE_FLAGS = {
     "staff": "Discord Staff",
-    "partner": "Discord Partner",
+    "partner": "Partnered Server Owner",
     "hypesquad": "HypeSquad Events",
     "bug_hunter": "Discord Bug Hunter",
     "bug_hunter_level_2": "Discord Bug Hunter",
