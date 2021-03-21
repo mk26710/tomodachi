@@ -23,3 +23,7 @@ class TomodachiContext(commands.Context):
     author: Union[Member, User]
     command: commands.Command
     message: Message
+
+    def __init__(self, **attrs):
+        super().__init__(**attrs)
+        self.icon = self.bot.icon
