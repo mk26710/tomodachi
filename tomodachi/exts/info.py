@@ -5,6 +5,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import io
+from collections import Counter
 from datetime import datetime
 from typing import Union
 
@@ -94,6 +95,41 @@ class Info(commands.Cog):
 
         created = "%s (`%s`)" % (humanize.naturaltime(datetime.utcnow() - user.created_at), user.created_at)
         embed.add_field(name="Creation date", value=f"{self.bot.icon('slowmode')} {created}", inline=False)
+
+        await ctx.send(embed=embed)
+
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    @commands.command(aliases=("si",), help="Brief information about discord servers that I am a part of")
+    async def serverinfo(self, ctx: TomodachiContext, server: discord.Guild = None):
+        guild = server or ctx.guild
+
+        embed = discord.Embed(title=f"{guild.name} ({guild.id})")
+        embed.description = f"{ctx.icon['owner']} Owner: {guild.owner} (`{guild.owner_id}`)"
+        if guild.description:
+            embed.description = f"{guild.description}\n\n{embed.description}"
+
+        embed.set_thumbnail(url=guild.icon_url)
+
+        features = ""
+        for feature in guild.features:
+            feature = str(feature).replace("_", " ").lower().title()
+            features = f"{features}\n{ctx.icon['roundedcheck']} {feature}"
+
+        if features:
+            embed.add_field(name="Features", value=features)
+
+        statuses_count = Counter(m.status.name for m in guild.members)
+        statuses = " ".join(f"{ctx.icon[s]} {c}" for s, c in statuses_count.most_common())
+        if statuses:
+            embed.add_field(name="Members", value=statuses)
+
+        specials_count = Counter(f.name for m in guild.members for f in m.public_flags.all())
+        flagged_members = " ".join(f"{ctx.icon[f]} {c}" for f, c in specials_count.most_common())
+        if flagged_members:
+            embed.add_field(name="Flags Stats", value=flagged_members, inline=False)
+
+        created = "%s (`%s`)" % (humanize.naturaltime(datetime.utcnow() - guild.created_at), guild.created_at)
+        embed.add_field(name="Server creation date", value=f"{ctx.icon['slowmode']} {created}", inline=False)
 
         await ctx.send(embed=embed)
 
