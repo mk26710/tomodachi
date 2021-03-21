@@ -104,7 +104,7 @@ class Info(commands.Cog):
         guild = server or ctx.guild
 
         embed = discord.Embed(title=f"{guild.name} ({guild.id})")
-        embed.description = f"{ctx.icon['owner']} Owner: {guild.owner} (`{guild.owner_id}`)"
+        embed.description = f"{ctx.icon['owner']} {guild.owner} (`{guild.owner_id}`)"
         if guild.description:
             embed.description = f"{guild.description}\n\n{embed.description}"
 
