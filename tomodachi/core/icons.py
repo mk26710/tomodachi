@@ -12,7 +12,7 @@ from tomodachi.utils.singleton import MetaSingleton
 
 __all__ = ["Icons"]
 
-DEFAULT_EMOJI_FALLBACK = discord.PartialEmoji(name="U00002139")
+DEFAULT_EMOJI_FALLBACK = discord.PartialEmoji(name="\U00002753")
 
 
 class Icons(metaclass=MetaSingleton):
