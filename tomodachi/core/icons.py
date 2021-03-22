@@ -29,5 +29,5 @@ class Icons(metaclass=MetaSingleton):
 
     async def setup(self, emojis: list[discord.Emoji]):
         for e in emojis:
-            partial = discord.PartialEmoji(name=e.name, id=e.id)
+            partial = discord.PartialEmoji(name=e.name, id=e.id, animated=e.animated)
             self._store[e.name.lower()] = partial
