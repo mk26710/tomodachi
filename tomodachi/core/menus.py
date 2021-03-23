@@ -89,10 +89,14 @@ class TomodachiMenu(menus.Menu):
         await self.format_embed(self.entries[self.__current_index])
         await self.message.edit(embed=self.embed)
 
-    @staticmethod
-    async def cleanup(message: discord.Message, seconds: Union[float, int] = 3.0):
-        await asyncio.sleep(seconds)
-        await message.delete()
+    async def cleanup(self, message: discord.Message, seconds: Union[float, int] = 1.0):
+        coro = message.delete(delay=seconds)
+
+        if message.author.id != self.ctx.bot.user.id and self.can_manage_messages is not True:
+            coro.close()
+            return
+
+        await coro
 
     @menus.button("\N{BLACK LEFT-POINTING DOUBLE TRIANGLE}")
     async def on_double_arrow_left(self, _payload):
