@@ -154,6 +154,8 @@ class TomodachiMenu(menus.Menu):
             if page_to_open == self.__current_index + 1:
                 return await question.edit(embed=discord.Embed(title="You are already on this page."))
 
+            asyncio.create_task(self.cleanup(response))
+
             await question.edit(embed=discord.Embed(title=f"Opening page {page_to_open}..."))
             self.__current_index = page_to_open - 1
             await self.update_page()
