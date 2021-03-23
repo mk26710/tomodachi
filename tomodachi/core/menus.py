@@ -105,6 +105,20 @@ class TomodachiMenu(menus.Menu):
         await self.decrease_index()
         await self.update_page()
 
+    @menus.button("\N{BLACK RIGHT-POINTING TRIANGLE}")
+    async def on_arrow_right(self, _payload):
+        await self.increase_index()
+        await self.update_page()
+
+    @menus.button("\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE}")
+    async def on_double_arrow_right(self, _payload):
+        try:
+            await self.maximize_index()
+        except IndexNotChanged:
+            pass
+        else:
+            await self.update_page()
+
     @menus.button("\N{BLACK SQUARE FOR STOP}\ufe0f")
     async def on_stop(self, _payload):
         self.stop()
@@ -139,17 +153,3 @@ class TomodachiMenu(menus.Menu):
 
         finally:
             asyncio.create_task(self.cleanup(question))
-
-    @menus.button("\N{BLACK RIGHT-POINTING TRIANGLE}")
-    async def on_arrow_right(self, _payload):
-        await self.increase_index()
-        await self.update_page()
-
-    @menus.button("\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE}")
-    async def on_double_arrow_right(self, _payload):
-        try:
-            await self.maximize_index()
-        except IndexNotChanged:
-            pass
-        else:
-            await self.update_page()
