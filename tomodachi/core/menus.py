@@ -133,14 +133,14 @@ class TomodachiMenu(menus.Menu):
         question = await channel.send(embed=discord.Embed(title="Which page would you like to open?"))
 
         try:
-            msg = await self.bot.wait_for("message", check=check, timeout=30.0)
+            response = await self.bot.wait_for("message", check=check, timeout=30.0)
         except asyncio.TimeoutError:
             await question.edit(embed=discord.Embed(title=":x: Too slow! "))
         else:
-            if not msg.content.isdigit():
+            if not response.content.isdigit():
                 return await question.edit(embed=discord.Embed(title=":x: You have to provide a digit!"))
 
-            page_to_open = int(msg.content)
+            page_to_open = int(response.content)
             if page_to_open > self.__max_index + 1 or page_to_open < 1:
                 return await question.edit(embed=discord.Embed(title=":x: You have to provided an invalid page."))
 
