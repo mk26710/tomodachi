@@ -27,6 +27,7 @@ class IndexNotChanged(Exception):
 class TomodachiMenu(menus.Menu):
     def __init__(self, entries: MenuEntries, *, title: Optional[str] = None):
         super().__init__(timeout=50.0, delete_message_after=False, clear_reactions_after=True)
+        self.can_manage_messages: Optional[bool] = None
         self.embed = discord.Embed(title=title)
         self.entries = entries
         self.__current_index = 0
@@ -67,6 +68,8 @@ class TomodachiMenu(menus.Menu):
         return self.__max_index
 
     async def start(self, ctx: Context, *, channel=None, wait=False):
+        self.can_manage_messages = ctx.guild.me.permissions_in(channel or ctx.channel).manage_messages
+
         if len(self.entries) > 1:
             return await super().start(ctx, channel=channel, wait=wait)
 
