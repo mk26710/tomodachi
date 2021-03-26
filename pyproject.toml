@@ -31,6 +31,9 @@ black = "^20.8b1"
 speed = ["uvloop"]
 pgsql = ["psycopg2"]
 
+[tool.black]
+line-length = 120
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
