@@ -5,12 +5,16 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import io
+from datetime import timedelta
 from typing import Union
 
 import discord
+import functools
+import asyncio
+import humanize
 import more_itertools as miter
 from aiohttp import ClientResponseError
-from discord.ext import commands
+from discord.ext import commands, flags
 
 from tomodachi.core import Tomodachi, TomodachiContext, TomodachiMenu
 
@@ -157,6 +161,24 @@ class Tools(commands.Cog):
         embed.set_thumbnail(url="attachment://color.png")
 
         await ctx.send(file=file, embed=embed)
+
+    @flags.add_flag("--days", "-d", "-D", type=int, default=0)
+    @flags.add_flag("--hours", "-h", "-H", type=int, default=0)
+    @flags.add_flag("--minutes", "-m", "-M", type=int, default=0)
+    @flags.add_flag("--seconds", "-s", "-S", type=int, default=0)
+    @flags.command(help="Turns time deltas into human readable text")
+    async def humanize(self, ctx: TomodachiContext, **kwargs):
+        delta = timedelta(
+            days=kwargs["days"],
+            hours=kwargs["hours"],
+            minutes=kwargs["minutes"],
+            seconds=kwargs["seconds"],
+        )
+
+        func = functools.partial(humanize.precisedelta, delta)
+        humanized = await asyncio.to_thread(func)
+
+        await ctx.send(humanized)
 
 
 def setup(bot):
