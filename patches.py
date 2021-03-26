@@ -5,6 +5,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import discord
+import ujson
 
 
 class EmbedOverridden(discord.Embed):
@@ -14,3 +15,10 @@ class EmbedOverridden(discord.Embed):
 
 
 discord.Embed = EmbedOverridden
+
+
+def to_json(obj):
+    return ujson.dumps(obj, ensure_ascii=True)
+
+
+discord.utils.to_json = to_json
