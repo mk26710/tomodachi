@@ -12,7 +12,7 @@ from tomodachi.utils.singleton import MetaSingleton
 
 __all__ = ["Icons"]
 
-DEFAULT_EMOJI_FALLBACK = discord.PartialEmoji(name="\U00002753")
+DEFAULT_EMOJI_FALLBACK = discord.PartialEmoji(name="\N{WHITE QUESTION MARK ORNAMENT}")
 
 
 class Icons(metaclass=MetaSingleton):
@@ -21,11 +21,11 @@ class Icons(metaclass=MetaSingleton):
     def __init__(self):
         self._store = defaultdict(lambda: DEFAULT_EMOJI_FALLBACK)
 
-    def __call__(self, name: str):
-        return self._store[name]
+    def __call__(self, arg):
+        return self.__getitem__(arg)
 
     def __getitem__(self, item):
-        return self._store[item]
+        return self._store[item.lower()]
 
     async def setup(self, emojis: list[discord.Emoji]):
         for e in emojis:
