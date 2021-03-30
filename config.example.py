@@ -1,5 +1,8 @@
 import discord
 
+# Default is 'https://discord.com/api/v7'
+# discord.http.Route.BASE = "https://canary.discord.com/api/v7"
+
 DEFAULT_PREFIX = "?"
 
 BACKEND_URL = "http://localhost:1234"
