@@ -8,9 +8,8 @@
 
 import asyncio
 import logging
-from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
-from typing import Mapping, Optional
+from typing import Optional
 
 import discord
 import humanize
@@ -20,28 +19,18 @@ from tomodachi.core import Tomodachi, TomodachiContext
 from tomodachi.utils.converters import TimeUnit
 
 
-@dataclass(frozen=True)
 class Reminder:
-    id: Optional[int]  # None in cases when being created by a user
-    created_at: datetime
-    trigger_at: datetime
-    author_id: int
-    guild_id: Optional[int]
-    channel_id: int
-    message_id: int
-    contents: str
+    __slots__ = ("id", "created_at", "trigger_at", "author_id", "guild_id", "channel_id", "message_id", "contents")
 
-    @classmethod
-    def from_dict(cls, data: Mapping):
-        class_fields = {f.name for f in fields(cls)}
-        kwargs = {k: v for k, v in data.items() if k in class_fields}
-
-        for field in class_fields:
-            kwarg = kwargs.get(field)
-            if not kwarg:
-                kwargs |= {field: None}
-
-        return Reminder(**kwargs)
+    def __init__(self, **kwargs):
+        self.id: Optional[int] = kwargs.get("id")
+        self.created_at: datetime = kwargs.get("created_at", datetime.utcnow())
+        self.trigger_at: datetime = kwargs.pop("trigger_at")
+        self.author_id: int = kwargs.pop("author_id")
+        self.guild_id: Optional[int] = kwargs.get("guild_id")
+        self.channel_id: int = kwargs.pop("channel_id")
+        self.message_id: int = kwargs.pop("message_id")
+        self.contents: str = kwargs.pop("contents", "...")
 
 
 class Reminders(commands.Cog):
@@ -112,7 +101,7 @@ class Reminders(commands.Cog):
         if not record:
             return None
 
-        return Reminder.from_dict(record)
+        return Reminder(**record)
 
     async def trigger_reminder(self, reminder: Reminder):
         await self.bot.pg.pool.execute("DELETE FROM reminders WHERE id = $1;", reminder.id)
@@ -147,7 +136,7 @@ class Reminders(commands.Cog):
                     reminder.contents,
                 )
 
-        reminder = Reminder.from_dict(inserted_row)
+        reminder = Reminder(**inserted_row)
 
         # Once the new reminder created dispatcher has to be restarted
         self.dispatcher.restart()
@@ -166,16 +155,14 @@ class Reminders(commands.Cog):
         now = datetime.utcnow()
         trigger_at = now + to_wait
 
-        reminder = Reminder.from_dict(
-            {
-                "created_at": now,
-                "trigger_at": trigger_at,
-                "author_id": ctx.author.id,
-                "guild_id": ctx.guild.id,
-                "channel_id": ctx.channel.id,
-                "message_id": ctx.message.id,
-                "contents": text,
-            }
+        reminder = Reminder(
+            created_at=now,
+            trigger_at=trigger_at,
+            author_id=ctx.author.id,
+            guild_id=ctx.guild.id,
+            channel_id=ctx.channel.id,
+            message_id=ctx.message.id,
+            contents=text,
         )
 
         reminder = await self.create_reminder(reminder)
