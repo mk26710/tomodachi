@@ -103,8 +103,8 @@ class Reminders(commands.Cog):
             query = (
                 "SELECT * FROM reminders WHERE trigger_at < (current_date + $1::interval) ORDER BY trigger_at LIMIT 1;"
             )
-
-            record = await conn.fetchrow(query, timedelta(days=7))
+            stmt = await conn.prepare(query)
+            record = await stmt.fetchrow(timedelta(days=7))
 
         if not record:
             return None
