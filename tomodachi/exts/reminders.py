@@ -116,7 +116,7 @@ class Reminders(commands.Cog):
         await self.bot.pg.pool.execute("DELETE FROM reminders WHERE id = $1;", reminder.id)
         self.bot.dispatch("triggered_reminder", reminder=reminder)
 
-    async def create_short_reminder(self, seconds, reminder: Reminder):
+    async def trigger_short_reminder(self, seconds, reminder: Reminder):
         await asyncio.sleep(seconds)
         self.bot.dispatch("triggered_reminder", reminder=reminder)
 
@@ -125,7 +125,7 @@ class Reminders(commands.Cog):
         delta = (reminder.trigger_at - now).total_seconds()
 
         if delta <= 60:
-            asyncio.create_task(self.create_short_reminder(delta, reminder))
+            asyncio.create_task(self.trigger_short_reminder(delta, reminder))
             return reminder
 
         async with self.bot.pg.pool.acquire() as con:
