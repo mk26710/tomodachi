@@ -5,12 +5,11 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import asyncio
+import logging
 from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
-from typing import Mapping
-from typing import Optional
+from typing import Mapping, Optional
 
-import logging
 import discord
 import humanize
 from discord.ext import commands, tasks
