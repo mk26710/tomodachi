@@ -32,5 +32,5 @@ class TomodachiContext(commands.Context):
         self.icon = self.bot.icon
 
     @staticmethod
-    def new_menu(entries: MenuEntries, *, title: Optional[str] = None):
+    def new_menu(entries: MenuEntries, *, title: Optional[str] = ""):
         return TomodachiMenu(entries, title=title)
