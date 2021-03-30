@@ -7,17 +7,19 @@
 from __future__ import annotations
 
 import asyncio
+import typing
 from typing import Any, Union, final, Optional
 
 import discord
 from discord.ext import menus, commands
 
-from tomodachi.core.context import TomodachiContext
+if typing.TYPE_CHECKING:
+    from tomodachi.core import TomodachiContext
 
-__all__ = ["TomodachiMenu"]
+    Context = Union[TomodachiContext, commands.Context]
+    MenuEntries = Union[list[Any], tuple[Any], set[Any]]
 
-Context = Union[TomodachiContext, commands.Context]
-MenuEntries = Union[list[Any], tuple[Any], set[Any]]
+__all__ = ["TomodachiMenu", "MenuEntries"]
 
 
 class IndexNotChanged(Exception):
