@@ -17,6 +17,7 @@ import humanize
 from discord.ext import commands, tasks
 
 from tomodachi.core import Tomodachi, TomodachiContext
+from tomodachi.utils.converters import TimeUnit
 
 
 @dataclass(frozen=True)
@@ -161,9 +162,9 @@ class Reminders(commands.Cog):
             await ctx.send(":x: You haven't used any subcommand, please, see help.")
 
     @reminder.command(name="add")
-    async def reminder_add(self, ctx: TomodachiContext, seconds_to_wait: int, *, text: str):
+    async def reminder_add(self, ctx: TomodachiContext, to_wait: TimeUnit, *, text: str):
         now = datetime.utcnow()
-        trigger_at = now + timedelta(seconds=seconds_to_wait)
+        trigger_at = now + to_wait
 
         reminder = Reminder.from_dict(
             {
