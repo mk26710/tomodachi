@@ -24,6 +24,7 @@ no-blocking-io = "^0.0.3"
 idna = {version = "^3.1", optional = true}
 urllib3 = "^1.26.4"
 uvloop = {version = "^0.15.2", optional = true}
+loguru = "^0.5.3"
 
 
 [tool.poetry.dev-dependencies]
