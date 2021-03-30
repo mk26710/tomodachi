@@ -88,21 +88,21 @@ class Reminders(commands.Cog):
 
     @tasks.loop()
     async def dispatcher(self):
-        logger.debug("FETCHING REMINDERS...")
+        logger.log("REMINDERS", "Fetching reminders...")
         reminder = await self.get_reminder()
 
         if not reminder:
-            logger.debug(f"DISPATCHER HAVE NOT FOUND ANY REMINDERS, CANCELLING THE TASK...")
+            logger.log("REMINDERS", f"Dispatcher have not found any reminder, cancelling the task...")
             # If there's no reminder, we wait for it's creation
             await self.reminder_created.wait()
             self.dispatcher.cancel()
         else:
-            logger.debug(f"DISPATCHER FOUND A REMINDER #{reminder.id}, SLEEPING UNTIL EXPIRES...")
+            logger.log("REMINDERS", f"Dispatcher found #{reminder.id} reminder, sleeping until expires...")
             now = datetime.utcnow()
             if reminder.trigger_at >= now:
                 await discord.utils.sleep_until(reminder.trigger_at)
 
-            logger.debug(f"TRIGGERING EVENT FOR #{reminder.id}")
+            logger.log("REMINDERS", f"Triggering event for #{reminder.id}")
             await self.trigger_reminder(reminder)
             self.reminder_created.clear()
 
