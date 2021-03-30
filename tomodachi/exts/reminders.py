@@ -14,6 +14,7 @@ from typing import Optional
 import discord
 import humanize
 from discord.ext import commands, tasks
+from more_itertools import chunked
 
 from tomodachi.core import Tomodachi, TomodachiContext
 from tomodachi.utils.converters import TimeUnit
@@ -192,6 +193,32 @@ class Reminders(commands.Cog):
             identifier = f" (#{reminder.id})"
 
         await ctx.send(f":ok_hand: I will remind you about this in {when}" + identifier)
+
+    @reminder.command(name="list", aliases=["ls"])
+    async def reminder_list(self, ctx: TomodachiContext):
+        now = datetime.utcnow()
+
+        async with self.bot.pg.pool.acquire() as conn:
+            query = "SELECT * FROM reminders WHERE author_id = $1 ORDER BY trigger_at LIMIT 500;"
+            stmt = await conn.prepare(query)
+            rows = await stmt.fetch(ctx.author.id)
+            reminders = tuple(Reminder(**row) for row in rows)
+
+        if not reminders:
+            return await ctx.send(":x: You don't have any reminders!")
+
+        lines = []
+        for reminder in reminders:
+            when = await asyncio.to_thread(humanize.precisedelta, reminder.trigger_at - now, format="%0.0f")
+            line = f"**(#{reminder.id})** in {when}"
+            lines.append(line)
+
+        entries = ["\n".join(chunk) for chunk in chunked(lines, 10)]
+
+        menu = ctx.new_menu(entries)
+        menu.embed.set_author(name=f"Requested by {ctx.author}", icon_url=ctx.author.avatar_url)
+
+        await menu.start(ctx)
 
 
 def setup(bot):
