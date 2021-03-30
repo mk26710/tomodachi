@@ -71,25 +71,22 @@ def setup_logging():
     )
 
 
-def start():
-    # Creating database pool
-    loop.run_until_complete(pg().setup(config.POSTGRES_DSN))
-
-    # Running the bot
-    tomodachi = Tomodachi(ROOT_DIR=ROOT_DIR)
-    tomodachi.load_extension("jishaku")
-
-    try:
-        loop.run_until_complete(tomodachi.start(config.TOKEN))
-
-    except KeyboardInterrupt:
-        loop.run_until_complete(tomodachi.logout())
-
-    finally:
-        discord.client._cleanup_loop(loop)  # noqa
-
-
 setup_uvloop()
 setup_logging()
 setup_jishaku()
-start()
+
+# Creating database pool
+loop.run_until_complete(pg().setup(config.POSTGRES_DSN))
+
+# Running the bot
+tomodachi = Tomodachi(ROOT_DIR=ROOT_DIR)
+tomodachi.load_extension("jishaku")
+
+try:
+    loop.run_until_complete(tomodachi.start(config.TOKEN))
+
+except KeyboardInterrupt:
+    loop.run_until_complete(tomodachi.logout())
+
+finally:
+    discord.client._cleanup_loop(loop)  # noqa
