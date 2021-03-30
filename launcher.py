@@ -8,49 +8,88 @@ import asyncio
 import importlib
 import logging
 import os.path
+import sys
 from typing import Any
 
 import discord
+from loguru import logger
 
 import config
 import patches  # noqa
+from intercept_handler import InterceptHandler
 from tomodachi.core.bot import Tomodachi
 from tomodachi.utils import pg
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 
-try:
-    uvloop: Any = importlib.import_module("uvloop")
-except ImportError:
-    pass
-else:
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
-
-# Enforcing jishaku flags
-for flag in config.JISHAKU_FLAGS:
-    os.environ[f"JISHAKU_{flag}"] = "True"
-
-# Setting up logging
-format_ = "%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s"
-logging.basicConfig(level=logging.INFO, format=format_)
-
-logger = logging.getLogger("discord")
-logger.setLevel(logging.INFO)
-
-# Creating database pool
 loop = asyncio.get_event_loop()
-loop.run_until_complete(pg().setup(config.POSTGRES_DSN))
 
-# Running the bot
-tomodachi = Tomodachi(ROOT_DIR=ROOT_DIR)
-tomodachi.load_extension("jishaku")
 
-try:
-    loop.run_until_complete(tomodachi.start(config.TOKEN))
+def setup_uvloop():
+    try:
+        uvloop: Any = importlib.import_module("uvloop")
+    except ImportError:
+        pass
+    else:
+        uvloop.install()
 
-except KeyboardInterrupt:
-    loop.run_until_complete(tomodachi.logout())
 
-finally:
-    discord.client._cleanup_loop(loop)  # noqa
+def setup_jishaku():
+    # Enforcing jishaku flags
+    for flag in config.JISHAKU_FLAGS:
+        os.environ[f"JISHAKU_{flag}"] = "True"
+
+
+def setup_logging():
+    # we need to get rid of default handler
+    logger.remove()
+
+    stdout_level = os.environ.get("LOGGING_LEVEL", "INFO")
+    fmt = "{time} - {name} - {level} - {message}"
+
+    logging.getLogger().setLevel(stdout_level)
+    logging.getLogger().handlers = [InterceptHandler()]
+
+    # Root logger
+    logger.add(
+        sys.stderr,
+        colorize=True,
+        level=stdout_level,
+        enqueue=True,
+    )
+
+    # Sink for reminders logs
+    logger.level("REMINDERS", no=1, icon="🕐", color="<blue>")
+
+    logger.add(
+        os.path.join(ROOT_DIR, "logs", "reminders", "{time}.log"),
+        format=fmt,
+        rotation="500 MB",
+        filter="tomodachi.exts.reminders",
+        level="REMINDERS",
+        enqueue=True,
+    )
+
+
+def start():
+    # Creating database pool
+    loop.run_until_complete(pg().setup(config.POSTGRES_DSN))
+
+    # Running the bot
+    tomodachi = Tomodachi(ROOT_DIR=ROOT_DIR)
+    tomodachi.load_extension("jishaku")
+
+    try:
+        loop.run_until_complete(tomodachi.start(config.TOKEN))
+
+    except KeyboardInterrupt:
+        loop.run_until_complete(tomodachi.logout())
+
+    finally:
+        discord.client._cleanup_loop(loop)  # noqa
+
+
+setup_uvloop()
+setup_logging()
+setup_jishaku()
+start()
