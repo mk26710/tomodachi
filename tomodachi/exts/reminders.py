@@ -106,6 +106,10 @@ class Reminders(commands.Cog):
             await self.trigger_reminder(reminder)
             self.reminder_created.clear()
 
+    async def reschedule_dispatcher(self):
+        self.dispatcher.cancel()
+        self.dispatcher.restart()
+
     async def get_reminder(self):
         async with self.bot.pg.pool.acquire() as conn:
             query = (
@@ -238,6 +242,18 @@ class Reminders(commands.Cog):
         embed.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=embed, delete_after=120.0)
+
+    @reminder.command(name="remove", aliases=["rmv", "delete", "del"], help="Remove some reminder from your list")
+    async def reminder_remove(self, ctx: TomodachiContext, reminder_id: EntryID):
+        async with self.bot.pg.pool.acquire() as conn:
+            query = "DELETE FROM reminders WHERE author_id = $1 AND id = $2 RETURNING TRUE;"
+            is_deleted = await conn.fetchval(query, ctx.author.id, reminder_id)
+
+        if not is_deleted:
+            return await ctx.send(f":x: Nothing happened. Most likely you don't have a reminder `#{reminder_id}`.")
+
+        await ctx.send(f":ok_hand: Successfully delete `#{reminder_id}` reminder.")
+        await self.reschedule_dispatcher()
 
 
 def setup(bot):
