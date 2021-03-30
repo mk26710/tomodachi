@@ -13,13 +13,15 @@ from typing import Any, Union, final, Optional
 import discord
 from discord.ext import menus, commands
 
+__all__ = ["TomodachiMenu"]
+
 if typing.TYPE_CHECKING:
     from tomodachi.core import TomodachiContext
 
     Context = Union[TomodachiContext, commands.Context]
     MenuEntries = Union[list[Any], tuple[Any], set[Any]]
 
-__all__ = ["TomodachiMenu", "MenuEntries"]
+    __all__.append("MenuEntries")
 
 
 class IndexNotChanged(Exception):
