@@ -255,6 +255,20 @@ class Reminders(commands.Cog):
         await ctx.send(f":ok_hand: Successfully delete `#{reminder_id}` reminder.")
         await self.reschedule_dispatcher()
 
+    @reminder.command(name="purge", aliases=["clear"])
+    async def reminder_purge(self, ctx: TomodachiContext):
+        async with self.bot.pg.pool.acquire() as conn:
+            query = "DELETE FROM reminders WHERE author_id = $1 RETURNING id;"
+            rows = await conn.fetch(query, ctx.author.id)
+            count = len(rows)
+
+        await self.reschedule_dispatcher()
+
+        if not count:
+            return await ctx.send(":x: Nothing happened. Looks like you have no reminders.")
+
+        await ctx.send(f":ok_hand: Deleted `{count}` reminder(s) from your list.")
+
 
 def setup(bot):
     bot.add_cog(Reminders(bot))
