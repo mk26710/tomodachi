@@ -10,9 +10,12 @@ from typing import TYPE_CHECKING, Optional, Union
 
 from discord.ext import commands
 
+from tomodachi.core.menus import TomodachiMenu
+
 if TYPE_CHECKING:
     from discord import Guild, Member, User, Message
     from tomodachi.core.bot import Tomodachi
+    from tomodachi.core.menus import MenuEntries
 
 __all__ = ["TomodachiContext"]
 
@@ -27,3 +30,7 @@ class TomodachiContext(commands.Context):
     def __init__(self, **attrs):
         super().__init__(**attrs)
         self.icon = self.bot.icon
+
+    @staticmethod
+    def new_menu(entries: MenuEntries, *, title: Optional[str] = None):
+        return TomodachiMenu(entries, title=title)
