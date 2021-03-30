@@ -45,6 +45,8 @@ class Reminder:
 class Reminders(commands.Cog):
     def __init__(self, bot: Tomodachi):
         self.bot = bot
+        # this Event will be sort of a "pause" for the dispatcher loop
+        self.reminder_created = asyncio.Event()
         self.dispatcher.start()
 
     def cog_unload(self):
@@ -79,24 +81,23 @@ class Reminders(commands.Cog):
 
     @tasks.loop()
     async def dispatcher(self):
-        logging.debug("DISPATCHING REMINDERS...")
+        logging.debug("FETCHING REMINDERS...")
         reminder = await self.get_reminder()
 
         if not reminder:
-            logging.debug(f"DISPATCHER HAVE NOT FOUND ANY REMINDERS, SLEEPING...")
+            logging.debug(f"DISPATCHER HAVE NOT FOUND ANY REMINDERS, CANCELLING THE TASK...")
+            # If there's no reminder, we wait for it's creation
+            await self.reminder_created.wait()
             self.dispatcher.cancel()
-            self.dispatcher.stop()
         else:
-            logging.debug(f"DISPATCHER FOUND A REMINDER #{reminder.id}")
+            logging.debug(f"DISPATCHER FOUND A REMINDER #{reminder.id}, SLEEPING UNTIL EXPIRES...")
             now = datetime.utcnow()
             if reminder.trigger_at >= now:
                 await discord.utils.sleep_until(reminder.trigger_at)
 
+            logging.debug(f"TRIGGERING EVENT FOR #{reminder.id}")
             await self.trigger_reminder(reminder)
-
-    @dispatcher.before_loop
-    async def dispatcher_init(self):
-        await self.bot.pg.connection_established.wait()
+            self.reminder_created.clear()
 
     async def get_reminder(self):
         async with self.bot.pg.pool.acquire() as conn:
@@ -146,11 +147,9 @@ class Reminders(commands.Cog):
 
         reminder = Reminder.from_dict(inserted_row)
 
-        if self.dispatcher.is_running():
-            self.dispatcher.cancel()
-
-        if not self.dispatcher.is_running():
-            self.dispatcher.start()
+        # Once the new reminder created dispatcher has to be restarted
+        self.dispatcher.restart()
+        self.reminder_created.set()
 
         return reminder
 
