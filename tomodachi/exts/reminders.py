@@ -249,11 +249,12 @@ class Reminders(commands.Cog):
             query = "DELETE FROM reminders WHERE author_id = $1 AND id = $2 RETURNING TRUE;"
             is_deleted = await conn.fetchval(query, ctx.author.id, reminder_id)
 
+        await self.reschedule_dispatcher()
+
         if not is_deleted:
             return await ctx.send(f":x: Nothing happened. Most likely you don't have a reminder `#{reminder_id}`.")
 
         await ctx.send(f":ok_hand: Successfully delete `#{reminder_id}` reminder.")
-        await self.reschedule_dispatcher()
 
     @reminder.command(name="purge", aliases=["clear"])
     async def reminder_purge(self, ctx: TomodachiContext):
