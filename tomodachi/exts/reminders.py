@@ -160,7 +160,7 @@ class Reminders(commands.Cog):
         reminder = Reminder(**inserted_row)
 
         # Once the new reminder created dispatcher has to be restarted
-        self.dispatcher.restart()
+        await self.reschedule_dispatcher()
         self.reminder_created.set()
 
         return reminder
