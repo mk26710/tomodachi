@@ -17,7 +17,7 @@ from discord.ext import commands, tasks
 from more_itertools import chunked
 
 from tomodachi.core import Tomodachi, TomodachiContext
-from tomodachi.utils.converters import TimeUnit
+from tomodachi.utils.converters import TimeUnit, EntryID
 
 
 def reminders_limit():
@@ -219,6 +219,25 @@ class Reminders(commands.Cog):
         menu.embed.set_author(name=f"Requested by {ctx.author}", icon_url=ctx.author.avatar_url)
 
         await menu.start(ctx)
+
+    @reminder.command(name="info", aliases=["check", "view"], help="Shows content of the specified reminder")
+    async def reminder_info(self, ctx: TomodachiContext, reminder_id: EntryID):
+        async with self.bot.pg.pool.acquire() as conn:
+            query = "SELECT * FROM reminders WHERE author_id = $1 AND id = $2;"
+            row = await conn.fetchrow(query, ctx.author.id, reminder_id)
+
+        if not row:
+            return await ctx.send(f":x: You don't have reminder with ID `#{reminder_id}`.")
+
+        reminder = Reminder(**row)
+
+        embed = discord.Embed()
+        embed.title = f"Reminder #{reminder.id}"
+        embed.description = f"{reminder.contents[0:2000]}"
+        embed.timestamp = reminder.trigger_at
+        embed.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=embed, delete_after=120.0)
 
 
 def setup(bot):
