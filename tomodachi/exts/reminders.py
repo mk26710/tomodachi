@@ -122,12 +122,13 @@ class Reminders(commands.Cog):
         async with self.bot.pg.pool.acquire() as con:
             async with con.transaction():
                 query = (
-                    "INSERT INTO reminders (trigger_at, author_id, guild_id, channel_id, message_id, contents) "
-                    "VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;"
+                    "INSERT INTO reminders (created_at, trigger_at, author_id, guild_id, channel_id, message_id, contents) "
+                    "VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;"
                 )
 
                 inserted_row = await con.fetchrow(
                     query,
+                    reminder.created_at,
                     reminder.trigger_at,
                     reminder.author_id,
                     reminder.guild_id,
