@@ -155,13 +155,13 @@ class Reminders(commands.Cog):
 
         return reminder
 
-    @commands.group(aliases=("r", "reminders"))
+    @commands.group(aliases=("r", "reminders"), help="Time based mentions")
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def reminder(self, ctx: commands.Context):
         if not ctx.invoked_subcommand:
             await ctx.send(":x: You haven't used any subcommand, please, see help.")
 
-    @reminder.command(name="add")
+    @reminder.command(name="add", aliases=("new", "a"), help="Create new reminder")
     async def reminder_add(self, ctx: TomodachiContext, to_wait: TimeUnit, *, text: str):
         now = datetime.utcnow()
         trigger_at = now + to_wait
