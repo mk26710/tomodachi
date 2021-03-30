@@ -181,7 +181,11 @@ class Reminders(commands.Cog):
         delta = reminder.trigger_at - reminder.created_at
         when = await asyncio.to_thread(humanize.naturaldelta, delta)
 
-        await ctx.send(f":ok_hand: I will remind you about this in {when}")
+        identifier = ""
+        if reminder.id:
+            identifier = f" (#{reminder.id})"
+
+        await ctx.send(f":ok_hand: I will remind you about this in {when}" + identifier)
 
 
 def setup(bot):
