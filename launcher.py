@@ -22,16 +22,12 @@ from tomodachi.utils import pg
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 
-loop = asyncio.get_event_loop()
-
-
-def setup_uvloop():
-    try:
-        uvloop: Any = importlib.import_module("uvloop")
-    except ImportError:
-        pass
-    else:
-        uvloop.install()
+try:
+    uvloop: Any = importlib.import_module("uvloop")
+except ImportError:
+    pass
+else:
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 def setup_jishaku():
@@ -71,11 +67,11 @@ def setup_logging():
     )
 
 
-setup_uvloop()
 setup_logging()
 setup_jishaku()
 
 # Creating database pool
+loop = asyncio.get_event_loop()
 loop.run_until_complete(pg().setup(config.POSTGRES_DSN))
 
 # Running the bot
