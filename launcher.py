@@ -7,7 +7,7 @@
 import asyncio
 import importlib
 import logging
-import os
+import os.path
 from typing import Any
 
 import discord
@@ -16,6 +16,8 @@ import config
 import patches  # noqa
 from tomodachi.core.bot import Tomodachi
 from tomodachi.utils import pg
+
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 
 try:
     uvloop: Any = importlib.import_module("uvloop")
@@ -41,7 +43,7 @@ loop = asyncio.get_event_loop()
 loop.run_until_complete(pg().setup(config.POSTGRES_DSN))
 
 # Running the bot
-tomodachi = Tomodachi()
+tomodachi = Tomodachi(ROOT_DIR=ROOT_DIR)
 tomodachi.load_extension("jishaku")
 
 try:

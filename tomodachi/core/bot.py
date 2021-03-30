@@ -33,6 +33,7 @@ class Tomodachi(commands.AutoShardedBot):
             owner_ids=config.OWNER_IDS,
         )
         self._BotBase__cogs = commands.core._CaseInsensitiveDict()  # noqa
+        self.ROOT_DIR: Union[str, bytes] = kwargs.pop("ROOT_DIR")
 
         # Alias to config module
         self.config = config
