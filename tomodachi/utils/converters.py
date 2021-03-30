@@ -38,3 +38,16 @@ class TimeUnit(Converter, timedelta):
         seconds = units_to_seconds.get(unit) * int(amount)
 
         return timedelta(seconds=seconds)
+
+
+entry_id_regex = re.compile(r"(#?)(\d{1,7})")
+
+
+class EntryID(Converter, int):
+    async def convert(self, ctx, argument):
+        match = re.match(entry_id_regex, argument)
+        if not match:
+            raise BadArgument(f'"{argument}" is invalid entry ID.')
+
+        _, num = match.groups()
+        return int(num)
