@@ -7,13 +7,13 @@
 #  Heavily inspired by https://github.com/Rapptz/RoboDanny <
 
 import asyncio
-import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
 import discord
 import humanize
 from discord.ext import commands, tasks
+from loguru import logger
 from more_itertools import chunked
 
 from tomodachi.core import Tomodachi, TomodachiContext
@@ -88,21 +88,21 @@ class Reminders(commands.Cog):
 
     @tasks.loop()
     async def dispatcher(self):
-        logging.debug("FETCHING REMINDERS...")
+        logger.debug("FETCHING REMINDERS...")
         reminder = await self.get_reminder()
 
         if not reminder:
-            logging.debug(f"DISPATCHER HAVE NOT FOUND ANY REMINDERS, CANCELLING THE TASK...")
+            logger.debug(f"DISPATCHER HAVE NOT FOUND ANY REMINDERS, CANCELLING THE TASK...")
             # If there's no reminder, we wait for it's creation
             await self.reminder_created.wait()
             self.dispatcher.cancel()
         else:
-            logging.debug(f"DISPATCHER FOUND A REMINDER #{reminder.id}, SLEEPING UNTIL EXPIRES...")
+            logger.debug(f"DISPATCHER FOUND A REMINDER #{reminder.id}, SLEEPING UNTIL EXPIRES...")
             now = datetime.utcnow()
             if reminder.trigger_at >= now:
                 await discord.utils.sleep_until(reminder.trigger_at)
 
-            logging.debug(f"TRIGGERING EVENT FOR #{reminder.id}")
+            logger.debug(f"TRIGGERING EVENT FOR #{reminder.id}")
             await self.trigger_reminder(reminder)
             self.reminder_created.clear()
 
