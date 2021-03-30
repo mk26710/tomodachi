@@ -19,6 +19,21 @@ from tomodachi.core import Tomodachi, TomodachiContext
 from tomodachi.utils.converters import TimeUnit
 
 
+def reminders_limit():
+    async def predicate(ctx: TomodachiContext):
+        async with ctx.bot.pg.pool.acquire() as conn:
+            query = "SELECT count(id) FROM reminders WHERE author_id = $1;"
+            stmt = await conn.prepare(query)
+            count = await stmt.fetchval(ctx.author.id)
+
+        if count >= 250:
+            raise commands.CheckFailure("Reached the limit of 250 reminders.")
+
+        return True
+
+    return commands.check(predicate)
+
+
 class Reminder:
     __slots__ = ("id", "created_at", "trigger_at", "author_id", "guild_id", "channel_id", "message_id", "contents")
 
@@ -151,6 +166,7 @@ class Reminders(commands.Cog):
         if not ctx.invoked_subcommand:
             await ctx.send(":x: You haven't used any subcommand, please, see help.")
 
+    @reminders_limit()
     @reminder.command(name="add", aliases=("new", "a"), help="Create new reminder")
     async def reminder_add(self, ctx: TomodachiContext, to_wait: TimeUnit, *, text: str):
         now = datetime.utcnow()
