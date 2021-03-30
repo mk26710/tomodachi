@@ -77,7 +77,7 @@ class Reminders(commands.Cog):
 
         await channel.send(f"{author.mention}", embed=embed, allowed_mentions=discord.AllowedMentions(users=True))
 
-    @tasks.loop(seconds=1.0)
+    @tasks.loop()
     async def dispatcher(self):
         logging.debug("DISPATCHING REMINDERS...")
         reminder = await self.get_reminder()
