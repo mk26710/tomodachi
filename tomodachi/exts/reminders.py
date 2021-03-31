@@ -190,7 +190,7 @@ class Reminders(commands.Cog):
         reminder = await self.create_reminder(reminder)
 
         delta = reminder.trigger_at - reminder.created_at
-        when = await asyncio.to_thread(humanize.naturaldelta, delta)
+        when = await asyncio.to_thread(humanize.precisedelta, delta, format="%0.0f")
 
         identifier = ""
         if reminder.id:
