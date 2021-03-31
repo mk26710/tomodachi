@@ -30,12 +30,11 @@ units_to_seconds = {
 
 class TimeUnit(Converter, timedelta):
     async def convert(self, ctx, argument):
-        match = re.match(time_regex, argument)
-        if not match:
+        matches = re.findall(time_regex, argument)
+        if not matches:
             raise BadArgument(f'"{argument}" is invalid time input.')
 
-        amount, unit = match.groups()
-        seconds = units_to_seconds.get(unit) * int(amount)
+        seconds = sum(units_to_seconds.get(unit) * int(amount) for amount, unit in matches)
 
         return timedelta(seconds=seconds)
 
