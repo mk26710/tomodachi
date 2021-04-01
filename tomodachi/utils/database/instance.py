@@ -4,12 +4,17 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
+
 import asyncio
-import typing
+from typing import Optional, Union, Any, TYPE_CHECKING
 
 from databases import Database, DatabaseURL
 
 from config import POSTGRES_DSN
+
+if TYPE_CHECKING:
+    from asyncpg.pool import Pool
 
 __all__ = ["db"]
 
@@ -19,12 +24,12 @@ class TomodachiDatabase(Database):
         "postgresql": "databases.backends.postgres:PostgresBackend",
     }
 
-    def __init__(self, url: typing.Union[str, "DatabaseURL"], **options: typing.Any):
+    def __init__(self, url: Union[str, "DatabaseURL"], **options: Any):
         super().__init__(url, **options)
         self._connection_established = asyncio.Event()
 
     @property
-    def pool(self):
+    def pool(self) -> Optional[Pool]:
         return self._backend._pool  # noqa
 
     async def wait_until_connected(self):
