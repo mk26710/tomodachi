@@ -13,6 +13,7 @@ from asyncpg.exceptions import UniqueViolationError
 from discord.ext import commands
 
 from tomodachi.core import Tomodachi, TomodachiContext
+from tomodachi.utils.database import blacklisted
 
 
 class Owner(commands.Cog):
@@ -35,7 +36,8 @@ class Owner(commands.Cog):
     @commands.command()
     async def block(self, ctx: TomodachiContext, target: discord.User, *, reason: str = None):
         try:
-            await self.bot.pg.block(target.id, reason or "No reason")
+            query = blacklisted.insert().values(user_id=target.id, reason=reason or "Because...")
+            await self.bot.db.execute(query)
         except UniqueViolationError:
             await ctx.send("user is blocked already")
         else:
@@ -44,7 +46,8 @@ class Owner(commands.Cog):
 
     @commands.command()
     async def unblock(self, ctx: TomodachiContext, target: discord.User):
-        await self.bot.pg.unblock(target.id)
+        query = blacklisted.delete().where(blacklisted.c.user_id == target.id).returning()
+        await self.bot.db.execute(query)
         await self.bot.fetch_blacklist()
         await ctx.send(":ok_hand:")
 
