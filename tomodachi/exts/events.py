@@ -6,8 +6,10 @@
 
 import discord
 from discord.ext import commands
+from sqlalchemy.dialects.postgresql import insert
 
 from tomodachi.core import Tomodachi
+from tomodachi.utils.database import guilds
 
 
 class Events(commands.Cog):
@@ -16,7 +18,8 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
-        await self.bot.pg.store_guild(guild.id)
+        stmt = insert(guilds).values(guild_id=guild.id).on_conflict_do_nothing()
+        await self.bot.db.execute(stmt)
 
 
 def setup(bot):
