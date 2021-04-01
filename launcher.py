@@ -82,7 +82,7 @@ try:
     loop.run_until_complete(tomodachi.start(config.TOKEN))
 
 except KeyboardInterrupt:
-    loop.run_until_complete(tomodachi.logout())
+    loop.run_until_complete(tomodachi.close())
 
 finally:
     discord.client._cleanup_loop(loop)  # noqa
