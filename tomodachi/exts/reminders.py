@@ -48,6 +48,9 @@ class Reminder:
         self.message_id: int = kwargs.pop("message_id")
         self.contents: str = kwargs.pop("contents", "...")
 
+    def __repr__(self):
+        return f"<Reminder id={self.id!r} trigger_at={self.trigger_at!r}>"
+
 
 class Reminders(commands.Cog):
     def __init__(self, bot: Tomodachi):
