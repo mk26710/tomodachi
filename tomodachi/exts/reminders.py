@@ -160,7 +160,7 @@ class Reminders(commands.Cog):
             return
 
         try:
-            author = self.bot.get_user(reminder.author_id) or self.bot.fetch_user(reminder.author_id)
+            author = self.bot.get_user(reminder.author_id) or await self.bot.fetch_user(reminder.author_id)
         except discord.NotFound:
             return
 
