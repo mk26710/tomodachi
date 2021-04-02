@@ -50,10 +50,19 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
             return _cog.qualified_name if _cog is not None else "Uncategorized"
 
         filtered: Commands = await self.filter_commands(self.context.bot.commands, sort=True, key=get_category)
-        groups = itertools.groupby(filtered, key=get_category)
 
-        for category, _commands in groups:
-            _commands = sorted(_commands, key=lambda c: len(c.name))
+        igrouped = itertools.groupby(filtered, key=get_category)
+        # cast iterators to tuples because we need to reuse values of it
+        grouped = tuple((cat, tuple(cmds)) for cat, cmds in igrouped)
+
+        def get_total_length(group):
+            return len("".join(cmd.name for cmd in group[1]))
+
+        # order group categories by the total length of command names
+        ordered = sorted(grouped, key=get_total_length, reverse=True)
+
+        for category, _commands in ordered:
+            _commands = sorted(_commands, key=lambda c: c.name)
             embed.add_field(name=category, value=" ".join(f"`{c.qualified_name}`" for c in _commands), inline=False)
 
         channel = self.get_destination()
