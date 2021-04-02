@@ -15,7 +15,7 @@ jishaku = {git = "https://github.com/Gorialis/jishaku", rev = "master"}
 ujson = "^4.0.2"
 discord-flags = "^2.1.1"
 gTTS = "^2.2.2"
-Pillow = "^8.1.2"
+Pillow = "^8.2.0"
 more-itertools = "^8.7.0"
 fastapi = "^0.63.0"
 uvicorn = "^0.13.4"
