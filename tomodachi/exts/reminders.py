@@ -157,7 +157,7 @@ class Reminders(commands.Cog):
         try:
             channel = self.bot.get_channel(reminder.id) or await self.bot.fetch_channel(reminder.channel_id)
         except (discord.NotFound, discord.Forbidden, discord.HTTPException):
-            return
+            channel = None
 
         try:
             author = self.bot.get_user(reminder.author_id) or await self.bot.fetch_user(reminder.author_id)
@@ -175,7 +175,15 @@ class Reminders(commands.Cog):
         embed.description = f"You asked me {when} ago [here]({jump_url}) to remind you of:\n\n{reminder.contents}"
         embed.set_footer(text=f"Reminder for {author}", icon_url=f"{author.avatar_url}")
 
-        await channel.send(f"{author.mention}", embed=embed, allowed_mentions=discord.AllowedMentions(users=True))
+        try:
+            # in case of channel gets deleted, DM the user
+            await (channel or author).send(
+                content=f"{author.mention}",
+                embed=embed,
+                allowed_mentions=discord.AllowedMentions(users=True),
+            )
+        except (discord.Forbidden, discord.HTTPException):
+            pass
 
     @commands.group(aliases=("r", "reminders"), help="Time based mentions")
     @commands.cooldown(1, 2.5, commands.BucketType.user)
