@@ -18,7 +18,6 @@ import config
 import patches  # noqa
 from intercept_handler import InterceptHandler
 from tomodachi.core.bot import Tomodachi
-from tomodachi.utils import pg
 from tomodachi.utils.database import db
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -73,7 +72,6 @@ setup_jishaku()
 
 # Creating database pool
 loop = asyncio.get_event_loop()
-loop.run_until_complete(pg().setup(config.POSTGRES_DSN))
 loop.run_until_complete(db.connect())
 
 # Running the bot
