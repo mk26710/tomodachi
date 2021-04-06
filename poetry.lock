@@ -584,7 +584,7 @@ speed = ["uvloop"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "ba6a8b8d80859a41c35deb028fef97fd9fee41c387f34df3688561bc560edd88"
+content-hash = "6736d2db017061c615fa0d0771d48ebc153a105e1beab6f8bf6e5ecf21e87d22"
 
 [metadata.files]
 aiohttp = [
