@@ -39,5 +39,17 @@ class TomodachiDatabase(Database):
         await super(TomodachiDatabase, self).connect()
         self._connection_established.set()
 
+    async def store_guild(self, guild_id: int):
+        async with self.pool.acquire() as conn:
+            async with conn.transaction():
+                query = "INSERT INTO guilds(guild_id) VALUES($1) ON CONFLICT DO NOTHING;"
+                await conn.execute(query, guild_id)
+
+    async def update_prefix(self, guild_id: int, new_prefix: str):
+        async with self.pool.acquire() as conn:
+            query = "UPDATE guilds SET prefix = $1 WHERE guild_id = $2 RETURNING prefix;"
+            prefix = await conn.fetchval(query, new_prefix, guild_id)
+        return prefix
+
 
 db = TomodachiDatabase(POSTGRES_DSN)
