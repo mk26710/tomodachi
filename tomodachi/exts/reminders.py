@@ -16,6 +16,7 @@ from discord.ext import commands
 from loguru import logger
 from more_itertools import chunked
 from sqlalchemy import text
+import attr
 
 from tomodachi.core import Tomodachi, TomodachiContext
 from tomodachi.utils.converters import TimeUnit, EntryID
@@ -37,21 +38,19 @@ def reminders_limit():
     return commands.check(predicate)
 
 
+@attr.s(slots=True)
 class Reminder:
-    __slots__ = ("id", "created_at", "trigger_at", "author_id", "guild_id", "channel_id", "message_id", "contents")
+    # Required attrs that needs to be passed in the constructor
+    trigger_at = attr.ib(type=datetime)
+    author_id = attr.ib(type=int)
+    channel_id = attr.ib(type=int)
+    message_id = attr.ib(type=int)
 
-    def __init__(self, **kwargs):
-        self.id: Optional[int] = kwargs.get("id")
-        self.created_at: datetime = kwargs.get("created_at", datetime.utcnow())
-        self.trigger_at: datetime = kwargs.pop("trigger_at")
-        self.author_id: int = kwargs.pop("author_id")
-        self.guild_id: Optional[int] = kwargs.get("guild_id")
-        self.channel_id: int = kwargs.pop("channel_id")
-        self.message_id: int = kwargs.pop("message_id")
-        self.contents: str = kwargs.pop("contents", "...")
-
-    def __repr__(self):
-        return f"<Reminder id={self.id!r} trigger_at={self.trigger_at!r}>"
+    # Attrs with default values
+    id = attr.ib(type=int, default=None)
+    guild_id = attr.ib(type=int, default=None)
+    contents = attr.ib(type=str, default="...", repr=False)
+    created_at = attr.ib(type=datetime, default=attr.Factory(datetime.utcnow))
 
 
 class Reminders(commands.Cog):
@@ -128,16 +127,7 @@ class Reminders(commands.Cog):
 
         async with self.bot.db.transaction():
             query = table.insert().returning(text("*"))
-            values = {
-                "guild_id": reminder.guild_id,
-                "channel_id": reminder.channel_id,
-                "message_id": reminder.message_id,
-                "author_id": reminder.author_id,
-                "created_at": reminder.created_at,
-                "trigger_at": reminder.trigger_at,
-                "contents": reminder.contents,
-            }
-
+            values = attr.asdict(reminder, filter=lambda _, v: v is not None)
             inserted_row = await self.bot.db.fetch_one(query, values)
 
         reminder = Reminder(**inserted_row)
