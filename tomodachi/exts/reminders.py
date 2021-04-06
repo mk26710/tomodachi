@@ -12,7 +12,7 @@ from typing import Optional
 
 import discord
 import humanize
-from discord.ext import commands, tasks
+from discord.ext import commands
 from loguru import logger
 from more_itertools import chunked
 
@@ -48,67 +48,50 @@ class Reminder:
         self.message_id: int = kwargs.pop("message_id")
         self.contents: str = kwargs.pop("contents", "...")
 
+    def __repr__(self):
+        return f"<Reminder id={self.id!r} trigger_at={self.trigger_at!r}>"
+
 
 class Reminders(commands.Cog):
     def __init__(self, bot: Tomodachi):
         self.bot = bot
-        # this Event will be sort of a "pause" for the dispatcher loop
-        self.reminder_created = asyncio.Event()
-        self.dispatcher.start()
+        self.cond = asyncio.Condition()
+        self.task = asyncio.create_task(self.dispatcher())
+        self.active: Optional[Reminder] = None
 
     def cog_unload(self):
-        self.dispatcher.cancel()
+        self.task.cancel()
 
-    @commands.Cog.listener()
-    async def on_triggered_reminder(self, reminder: Reminder):
-        await self.bot.wait_until_ready()
-
-        try:
-            channel = self.bot.get_channel(reminder.id) or await self.bot.fetch_channel(reminder.channel_id)
-        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
-            return
-
-        try:
-            author = self.bot.get_user(reminder.author_id) or self.bot.fetch_user(reminder.author_id)
-        except discord.NotFound:
-            return
-
-        now = datetime.utcnow()
-        delta = now - reminder.created_at
-        when = await asyncio.to_thread(humanize.naturaldelta, delta)
-
-        jump_url = "https://discord.com/channels/{0.guild_id}/{0.channel_id}/{0.message_id}".format(reminder)
-
-        embed = discord.Embed()
-        embed.title = f"Reminder #{reminder.id}" if reminder.id is not None else "Short Reminder"
-        embed.description = f"You asked me {when} ago [here]({jump_url}) to remind you of:\n\n{reminder.contents}"
-        embed.set_footer(text=f"Reminder for {author}", icon_url=f"{author.avatar_url}")
-
-        await channel.send(f"{author.mention}", embed=embed, allowed_mentions=discord.AllowedMentions(users=True))
-
-    @tasks.loop()
     async def dispatcher(self):
-        logger.log("REMINDERS", "Fetching reminders...")
-        reminder = await self.get_reminder()
+        async with self.cond as cond:
+            logger.log("REMINDERS", "Getting reminder...")
+            reminder = self.active = await self.get_reminder()
 
-        if not reminder:
-            logger.log("REMINDERS", f"Dispatcher have not found any reminder, cancelling the task...")
-            # If there's no reminder, we wait for it's creation
-            await self.reminder_created.wait()
-            self.dispatcher.cancel()
-        else:
-            logger.log("REMINDERS", f"Dispatcher found #{reminder.id} reminder, sleeping until expires...")
+            if not reminder:
+                logger.log("REMINDERS", "Reminder not found, pausing the task...")
+                await cond.wait()
+                await self.reschedule()
+
+            logger.log("REMINDERS", f"Reminder #{reminder.id} found, sleeping until expires...")
             now = datetime.utcnow()
             if reminder.trigger_at >= now:
                 await discord.utils.sleep_until(reminder.trigger_at)
 
-            logger.log("REMINDERS", f"Triggering event for #{reminder.id}")
             await self.trigger_reminder(reminder)
-            self.reminder_created.clear()
+            logger.log("REMINDERS", "Triggered the reminder event")
+            await self.reschedule()
 
-    async def reschedule_dispatcher(self):
-        self.dispatcher.cancel()
-        self.dispatcher.restart()
+    async def reschedule(self):
+        if not self.task.cancelled() or self.task.done():
+            logger.log("REMINDERS", "Cancelling dispatcher...")
+            self.task.cancel()
+
+        logger.log("REMINDERS", "Starting dispatcher...")
+        self.task = asyncio.create_task(self.dispatcher())
+
+        async with self.cond:
+            logger.log("REMINDERS", "Notifying waiting thread...")
+            self.cond.notify_all()
 
     async def get_reminder(self):
         async with self.bot.pg.pool.acquire() as conn:
@@ -116,7 +99,7 @@ class Reminders(commands.Cog):
                 "SELECT * FROM reminders WHERE trigger_at < (current_date + $1::interval) ORDER BY trigger_at LIMIT 1;"
             )
             stmt = await conn.prepare(query)
-            record = await stmt.fetchrow(timedelta(days=7))
+            record = await stmt.fetchrow(timedelta(days=28))
 
         if not record:
             return None
@@ -142,7 +125,8 @@ class Reminders(commands.Cog):
         async with self.bot.pg.pool.acquire() as con:
             async with con.transaction():
                 query = (
-                    "INSERT INTO reminders (created_at, trigger_at, author_id, guild_id, channel_id, message_id, contents) "
+                    "INSERT INTO "
+                    "reminders (created_at, trigger_at, author_id, guild_id, channel_id, message_id, contents) "
                     "VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;"
                 )
 
@@ -158,12 +142,48 @@ class Reminders(commands.Cog):
                 )
 
         reminder = Reminder(**inserted_row)
-
         # Once the new reminder created dispatcher has to be restarted
-        await self.reschedule_dispatcher()
-        self.reminder_created.set()
+        # but only if the currently active reminder happens later than new
+        if (self.active and self.active.trigger_at >= reminder.trigger_at) or self.active is None:
+            logger.log("REMINDERS", "New reminder triggers earlier, rescheduling")
+            asyncio.create_task(self.reschedule())
 
         return reminder
+
+    @commands.Cog.listener()
+    async def on_triggered_reminder(self, reminder: Reminder):
+        await self.bot.wait_until_ready()
+
+        try:
+            channel = self.bot.get_channel(reminder.id) or await self.bot.fetch_channel(reminder.channel_id)
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            channel = None
+
+        try:
+            author = self.bot.get_user(reminder.author_id) or await self.bot.fetch_user(reminder.author_id)
+        except discord.NotFound:
+            return
+
+        now = datetime.utcnow()
+        delta = now - reminder.created_at
+        when = await asyncio.to_thread(humanize.naturaldelta, delta)
+
+        jump_url = "https://discord.com/channels/{0.guild_id}/{0.channel_id}/{0.message_id}".format(reminder)
+
+        embed = discord.Embed()
+        embed.title = f"Reminder #{reminder.id}" if reminder.id is not None else "Short Reminder"
+        embed.description = f"You asked me {when} ago [here]({jump_url}) to remind you of:\n\n{reminder.contents}"
+        embed.set_footer(text=f"Reminder for {author}", icon_url=f"{author.avatar_url}")
+
+        try:
+            # in case of channel gets deleted, DM the user
+            await (channel or author).send(
+                content=f"{author.mention}",
+                embed=embed,
+                allowed_mentions=discord.AllowedMentions(users=True),
+            )
+        except (discord.Forbidden, discord.HTTPException):
+            pass
 
     @commands.group(aliases=("r", "reminders"), help="Time based mentions")
     @commands.cooldown(1, 2.5, commands.BucketType.user)
@@ -173,7 +193,7 @@ class Reminders(commands.Cog):
 
     @reminders_limit()
     @reminder.command(name="add", aliases=("new", "a"), help="Create new reminder")
-    async def reminder_add(self, ctx: TomodachiContext, to_wait: TimeUnit, *, text: str):
+    async def reminder_add(self, ctx: TomodachiContext, to_wait: TimeUnit, *, text: str = "..."):
         now = datetime.utcnow()
         trigger_at = now + to_wait
 
@@ -249,11 +269,10 @@ class Reminders(commands.Cog):
             query = "DELETE FROM reminders WHERE author_id = $1 AND id = $2 RETURNING TRUE;"
             is_deleted = await conn.fetchval(query, ctx.author.id, reminder_id)
 
-        await self.reschedule_dispatcher()
-
         if not is_deleted:
             return await ctx.send(f":x: Nothing happened. Most likely you don't have a reminder `#{reminder_id}`.")
 
+        await self.reschedule()
         await ctx.send(f":ok_hand: Successfully delete `#{reminder_id}` reminder.")
 
     @reminder.command(name="purge", aliases=["clear"])
@@ -263,11 +282,10 @@ class Reminders(commands.Cog):
             rows = await conn.fetch(query, ctx.author.id)
             count = len(rows)
 
-        await self.reschedule_dispatcher()
-
         if not count:
             return await ctx.send(":x: Nothing happened. Looks like you have no reminders.")
 
+        await self.reschedule()
         await ctx.send(f":ok_hand: Deleted `{count}` reminder(s) from your list.")
 
 
