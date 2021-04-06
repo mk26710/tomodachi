@@ -16,7 +16,8 @@ from discord.ext import commands
 import config
 from tomodachi.core.context import TomodachiContext
 from tomodachi.core.icons import Icons
-from tomodachi.utils import pg, make_intents, make_cache_policy, AniList
+from tomodachi.utils import AniList, make_cache_policy, make_intents
+from tomodachi.utils.database import db
 
 __all__ = ["Tomodachi"]
 
@@ -38,7 +39,10 @@ class Tomodachi(commands.AutoShardedBot):
         # Alias to config module
         self.config = config
 
-        self.pg = pg()
+        # Database shortcuts
+        self.db = db
+        self.pool = db.pool
+
         self.prefixes = {}
         # tuple with user ids
         self.blacklist = ()
@@ -64,6 +68,7 @@ class Tomodachi(commands.AutoShardedBot):
         if not self.session.closed:
             await self.session.close()
 
+        await self.db.disconnect()
         await super().close()
 
     async def get_prefix(self, message: discord.Message):
@@ -77,7 +82,7 @@ class Tomodachi(commands.AutoShardedBot):
         return prefixes
 
     async def update_prefix(self, guild_id: int, new_prefix: str):
-        prefix = await self.pg.update_prefix(guild_id, new_prefix)
+        prefix = await self.db.update_prefix(guild_id, new_prefix)
         self.prefixes[guild_id] = prefix
         return self.prefixes[guild_id]
 
@@ -105,17 +110,17 @@ class Tomodachi(commands.AutoShardedBot):
         await self.invoke(ctx)
 
     async def fetch_prefixes(self):
-        await self.pg.connection_established.wait()
+        await self.db.wait_until_connected()
 
-        async with self.pg.pool.acquire() as conn:
+        async with self.pool.acquire() as conn:
             records = await conn.fetch("SELECT guild_id, prefix FROM guilds;")
 
         self.prefixes.update({k: v for k, v in map(tuple, records)})
 
     async def fetch_blacklist(self):
-        await self.pg.connection_established.wait()
+        await self.db.wait_until_connected()
 
-        async with self.pg.pool.acquire() as conn:
+        async with self.pool.acquire() as conn:
             records = await conn.fetch("SELECT DISTINCT * FROM blacklisted;")
 
         self.blacklist = tuple(r["user_id"] for r in records)
@@ -124,7 +129,7 @@ class Tomodachi(commands.AutoShardedBot):
         await self.wait_until_ready()
 
         for guild in self.guilds:
-            self.loop.create_task(self.pg.store_guild(guild.id))
+            self.loop.create_task(self.db.store_guild(guild.id))
 
         self.support_guild = support_guild = await self.fetch_guild(config.SUPPORT_GUILD_ID)
         support_channels = await support_guild.fetch_channels()
