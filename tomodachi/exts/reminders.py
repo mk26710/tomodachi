@@ -22,7 +22,7 @@ from tomodachi.utils.converters import TimeUnit, EntryID
 
 def reminders_limit():
     async def predicate(ctx: TomodachiContext):
-        async with ctx.bot.pg.pool.acquire() as conn:
+        async with ctx.bot.pool.acquire() as conn:
             query = "SELECT count(id) FROM reminders WHERE author_id = $1;"
             stmt = await conn.prepare(query)
             count = await stmt.fetchval(ctx.author.id)
@@ -94,7 +94,7 @@ class Reminders(commands.Cog):
             self.cond.notify_all()
 
     async def get_reminder(self):
-        async with self.bot.pg.pool.acquire() as conn:
+        async with self.bot.pool.acquire() as conn:
             query = (
                 "SELECT * FROM reminders WHERE trigger_at < (current_date + $1::interval) ORDER BY trigger_at LIMIT 1;"
             )
@@ -107,7 +107,7 @@ class Reminders(commands.Cog):
         return Reminder(**record)
 
     async def trigger_reminder(self, reminder: Reminder):
-        await self.bot.pg.pool.execute("DELETE FROM reminders WHERE id = $1;", reminder.id)
+        await self.bot.pool.execute("DELETE FROM reminders WHERE id = $1;", reminder.id)
         self.bot.dispatch("triggered_reminder", reminder=reminder)
 
     async def trigger_short_reminder(self, seconds, reminder: Reminder):
@@ -122,7 +122,7 @@ class Reminders(commands.Cog):
             asyncio.create_task(self.trigger_short_reminder(delta, reminder))
             return reminder
 
-        async with self.bot.pg.pool.acquire() as con:
+        async with self.bot.pool.acquire() as con:
             async with con.transaction():
                 query = (
                     "INSERT INTO "
@@ -222,7 +222,7 @@ class Reminders(commands.Cog):
     async def reminder_list(self, ctx: TomodachiContext):
         now = datetime.utcnow()
 
-        async with self.bot.pg.pool.acquire() as conn:
+        async with self.bot.pool.acquire() as conn:
             query = "SELECT * FROM reminders WHERE author_id = $1 ORDER BY trigger_at LIMIT 500;"
             stmt = await conn.prepare(query)
             rows = await stmt.fetch(ctx.author.id)
@@ -246,7 +246,7 @@ class Reminders(commands.Cog):
 
     @reminder.command(name="info", aliases=["check", "view"], help="Shows content of the specified reminder")
     async def reminder_info(self, ctx: TomodachiContext, reminder_id: EntryID):
-        async with self.bot.pg.pool.acquire() as conn:
+        async with self.bot.pool.acquire() as conn:
             query = "SELECT * FROM reminders WHERE author_id = $1 AND id = $2;"
             row = await conn.fetchrow(query, ctx.author.id, reminder_id)
 
@@ -265,7 +265,7 @@ class Reminders(commands.Cog):
 
     @reminder.command(name="remove", aliases=["rmv", "delete", "del"], help="Remove some reminder from your list")
     async def reminder_remove(self, ctx: TomodachiContext, reminder_id: EntryID):
-        async with self.bot.pg.pool.acquire() as conn:
+        async with self.bot.pool.acquire() as conn:
             query = "DELETE FROM reminders WHERE author_id = $1 AND id = $2 RETURNING TRUE;"
             is_deleted = await conn.fetchval(query, ctx.author.id, reminder_id)
 
@@ -277,7 +277,7 @@ class Reminders(commands.Cog):
 
     @reminder.command(name="purge", aliases=["clear"])
     async def reminder_purge(self, ctx: TomodachiContext):
-        async with self.bot.pg.pool.acquire() as conn:
+        async with self.bot.pool.acquire() as conn:
             query = "DELETE FROM reminders WHERE author_id = $1 RETURNING id;"
             rows = await conn.fetch(query, ctx.author.id)
             count = len(rows)
