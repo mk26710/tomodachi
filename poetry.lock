@@ -345,7 +345,7 @@ name = "mypy"
 version = "0.812"
 description = "Optional static typing for Python"
 category = "dev"
-optional = true
+optional = false
 python-versions = ">=3.5"
 
 [package.dependencies]
@@ -584,7 +584,7 @@ speed = ["uvloop"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "0cbaa62ea764a14c0601717073a75854a1ba4f1b1b9da6d4afb111e0596fd412"
+content-hash = "ba6a8b8d80859a41c35deb028fef97fd9fee41c387f34df3688561bc560edd88"
 
 [metadata.files]
 aiohttp = [
