@@ -180,6 +180,11 @@ class Reminders(commands.Cog):
         if not ctx.invoked_subcommand:
             await ctx.send(":x: You haven't used any subcommand, please, see help.")
 
+    @commands.is_owner()
+    @reminder.command(name="active")
+    async def reminder_get_active(self, ctx: TomodachiContext):
+        await ctx.send(f"Current active reminder: {self.active}")
+
     @reminders_limit()
     @reminder.command(name="add", aliases=("new", "a"), help="Create new reminder")
     async def reminder_add(self, ctx: TomodachiContext, to_wait: TimeUnit, *, text: str = "..."):
