@@ -5,6 +5,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import io
+import random
 import asyncio
 import functools
 from typing import Union
@@ -36,6 +37,12 @@ class Tools(commands.Cog):
             url = message.attachments[0].url
 
         return url
+
+    @commands.command(description='To provide a sentence as one of options, use quotes "word1 word 2"')
+    async def choose(self, ctx: TomodachiContext, *options: commands.clean_content(escape_markdown=True)):
+        """Randomly selects a word or a sentence"""
+        selected = random.choice(options)
+        await ctx.send(f"\N{SQUARED KATAKANA KOKO} {selected}")
 
     @commands.command()
     @commands.cooldown(1, 10.0, commands.BucketType.user)
