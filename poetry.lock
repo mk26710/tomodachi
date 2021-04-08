@@ -283,6 +283,19 @@ astunparse = ">=1.6.3,<2.0.0"
 test = ["pytest", "pytest-cov"]
 
 [[package]]
+name = "isort"
+version = "5.8.0"
+description = "A Python utility / library to sort Python imports."
+category = "dev"
+optional = true
+python-versions = ">=3.6,<4.0"
+
+[package.extras]
+pipfile_deprecated_finder = ["pipreqs", "requirementslib"]
+requirements_deprecated_finder = ["pipreqs", "pip-api"]
+colors = ["colorama (>=0.4.3,<0.5.0)"]
+
+[[package]]
 name = "jishaku"
 version = "2.0.0"
 description = "A discord.py extension including useful tools for bot development and debugging."
@@ -584,7 +597,7 @@ speed = ["uvloop"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "cfebbe64fb45b0168f3b986b55332bf9fea6e5306f3258dba2f64d09863dae2b"
+content-hash = "1b0d7a559c4324a0cba1fc8a50fb25ba0c2184df9e09e03b73f0c55651ad3820"
 
 [metadata.files]
 aiohttp = [
@@ -761,6 +774,10 @@ idna = [
 import-expression = [
     {file = "import_expression-1.1.4-py3-none-any.whl", hash = "sha256:292099910a4dcc65ba562377cd2265487ba573dd63d73bdee5deec36ca49555b"},
     {file = "import_expression-1.1.4.tar.gz", hash = "sha256:06086a6ab3bfa528b1c478e633d6adf2b3a990e31440f6401b0f3ea12b0659a9"},
+]
+isort = [
+    {file = "isort-5.8.0-py3-none-any.whl", hash = "sha256:2bb1680aad211e3c9944dbce1d4ba09a989f04e238296c87fe2139faa26d655d"},
+    {file = "isort-5.8.0.tar.gz", hash = "sha256:0a943902919f65c5684ac4e0154b1ad4fac6dcaa5d9f3426b732f1c8b5419be6"},
 ]
 jishaku = []
 loguru = [
