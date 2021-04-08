@@ -72,12 +72,12 @@ class Tomodachi(commands.AutoShardedBot):
         await super().close()
 
     async def get_prefix(self, message: discord.Message):
-        prefixes = (f"<@!{self.user.id}> ", f"<@{self.user.id}> ")
+        prefixes = [f"<@!{self.user.id}> ", f"<@{self.user.id}> "]
 
         if not (p := self.prefixes.get(message.guild.id)):
-            prefixes += (config.DEFAULT_PREFIX,)
+            prefixes.append(config.DEFAULT_PREFIX)
         else:
-            prefixes += (p,)
+            prefixes.append(p)
 
         return prefixes
 
