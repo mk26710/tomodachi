@@ -11,7 +11,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from tomodachi.core import Tomodachi, TomodachiContext, TomodachiMenu
+from tomodachi.core import Tomodachi, TomodachiMenu, TomodachiContext
 from tomodachi.utils.apis import AniList, AniMedia, MediaType
 
 waifu_categories = (

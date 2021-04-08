@@ -5,18 +5,18 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import io
-from datetime import timedelta
+import asyncio
+import functools
 from typing import Union
+from datetime import timedelta
 
 import discord
-import functools
-import asyncio
 import humanize
 import more_itertools as miter
 from aiohttp import ClientResponseError
-from discord.ext import commands, flags
+from discord.ext import flags, commands
 
-from tomodachi.core import Tomodachi, TomodachiContext, TomodachiMenu
+from tomodachi.core import Tomodachi, TomodachiMenu, TomodachiContext
 
 EmojiProxy = Union[discord.Emoji, discord.PartialEmoji]
 

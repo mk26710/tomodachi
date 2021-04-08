@@ -5,17 +5,17 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import io
-from collections import Counter
-from datetime import datetime
 from typing import Union
+from datetime import datetime
+from collections import Counter
 
 import discord
 import humanize
 from aiohttp import ClientResponseError
-from discord.ext import commands, flags
+from discord.ext import flags, commands
 
 from tomodachi.core import Tomodachi, TomodachiContext
-from tomodachi.utils import make_progress_bar, HUMAN_READABLE_FLAGS, HUMANIZED_ACTIVITY
+from tomodachi.utils import HUMANIZED_ACTIVITY, HUMAN_READABLE_FLAGS, make_progress_bar
 
 
 class Info(commands.Cog):

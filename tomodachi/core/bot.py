@@ -7,16 +7,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Union
+from typing import Union, Optional
 
 import aiohttp
 import discord
 from discord.ext import commands
 
 import config
-from tomodachi.core.context import TomodachiContext
+from tomodachi.utils import AniList, make_intents, make_cache_policy
 from tomodachi.core.icons import Icons
-from tomodachi.utils import AniList, make_cache_policy, make_intents
+from tomodachi.core.context import TomodachiContext
 from tomodachi.utils.database import db
 
 __all__ = ["Tomodachi"]

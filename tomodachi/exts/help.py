@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import io
 import itertools
-from typing import Union, List, NewType
+from typing import List, Union, NewType
 
 import discord
 from discord.ext import commands

@@ -8,7 +8,7 @@ import sys
 import traceback
 
 import discord
-from discord.ext import commands, flags
+from discord.ext import flags, commands
 
 from tomodachi.core import Tomodachi, TomodachiContext
 

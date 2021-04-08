@@ -5,8 +5,8 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from .bot import *
+from .icons import *
+from .menus import *
 from .checks import *
 from .context import *
 from .exceptions import *
-from .icons import *
-from .menus import *
