@@ -64,13 +64,13 @@ class Reminders(commands.Cog):
         self.task.cancel()
 
     async def dispatcher(self):
-        async with self.cond as cond:
+        async with self.cond:
             logger.log("REMINDERS", "Getting reminder...")
             reminder = self.active = await self.get_reminder()
 
             if not reminder:
                 logger.log("REMINDERS", "Reminder not found, pausing the task...")
-                await cond.wait()
+                await self.cond.wait()
                 await self.reschedule()
 
             logger.log("REMINDERS", f"Reminder #{reminder.id} found, sleeping until expires...")
