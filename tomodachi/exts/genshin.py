@@ -5,8 +5,8 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import asyncio
-from datetime import timedelta
 from typing import Optional
+from datetime import timedelta
 
 import humanize
 from discord.ext import commands

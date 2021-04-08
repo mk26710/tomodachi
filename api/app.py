@@ -7,11 +7,11 @@
 import io
 
 from PIL import Image
-from fastapi import FastAPI, Request, Header, Depends
-from fastapi.exceptions import HTTPException
-from fastapi.responses import PlainTextResponse, StreamingResponse
 from gtts import gTTS
+from fastapi import Header, Depends, FastAPI, Request
 from pydantic import BaseModel
+from fastapi.responses import PlainTextResponse, StreamingResponse
+from fastapi.exceptions import HTTPException
 
 
 class TTSModel(BaseModel):

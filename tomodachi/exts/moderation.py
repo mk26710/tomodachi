@@ -12,7 +12,7 @@ from typing import Union, Optional
 import discord
 from discord.ext import commands
 
-from tomodachi.core import TomodachiContext, Tomodachi
+from tomodachi.core import Tomodachi, TomodachiContext
 
 MemberUser = Union[discord.Member, discord.User]
 

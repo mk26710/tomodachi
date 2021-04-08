@@ -6,9 +6,9 @@
 
 from __future__ import annotations
 
-import asyncio
 import typing
-from typing import Any, Union, final, Optional
+import asyncio
+from typing import Any, Union, Optional, final
 
 import discord
 from discord.ext import menus, commands

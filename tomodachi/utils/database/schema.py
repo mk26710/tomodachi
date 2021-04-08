@@ -4,8 +4,8 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from sqlalchemy import Table, MetaData, Column, func, cast
-from sqlalchemy.dialects.postgresql import BIGINT, VARCHAR, TIMESTAMP, TEXT
+from sqlalchemy import Table, Column, MetaData, cast, func
+from sqlalchemy.dialects.postgresql import TEXT, BIGINT, VARCHAR, TIMESTAMP
 
 __all__ = ["metadata", "guilds", "reminders", "blacklisted"]
 

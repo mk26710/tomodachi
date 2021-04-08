@@ -9,8 +9,8 @@ from __future__ import annotations
 import asyncio
 
 import discord
-from asyncpg.exceptions import UniqueViolationError
 from discord.ext import commands
+from asyncpg.exceptions import UniqueViolationError
 
 from tomodachi.core import Tomodachi, TomodachiContext
 from tomodachi.utils.database import blacklisted

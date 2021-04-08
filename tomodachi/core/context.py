@@ -6,14 +6,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Union, Optional
 
 from discord.ext import commands
 
 from tomodachi.core.menus import TomodachiMenu
 
 if TYPE_CHECKING:
-    from discord import Guild, Member, User, Message
+    from discord import User, Guild, Member, Message
+
     from tomodachi.core.bot import Tomodachi
     from tomodachi.core.menus import MenuEntries
 
