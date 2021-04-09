@@ -94,6 +94,9 @@ class Info(CogMixin):
         created = "%s (`%s`)" % (humanize.naturaltime(datetime.utcnow() - user.created_at), user.created_at)
         embed.add_field(name="Creation date", value=f"{self.bot.icon('slowmode')} {created}", inline=False)
 
+        if await self.bot.is_owner(user):
+            embed.description = f"{ctx.icon['developer']} **Bot Admin**"
+
         await ctx.send(embed=embed)
 
     @commands.cooldown(1, 3, commands.BucketType.user)
