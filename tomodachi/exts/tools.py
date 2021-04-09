@@ -9,15 +9,15 @@ import random
 import asyncio
 import functools
 from typing import Union
-from datetime import timedelta
 
 import discord
 import humanize
 import more_itertools as miter
 from aiohttp import ClientResponseError
-from discord.ext import flags, commands
+from discord.ext import commands
 
 from tomodachi.core import CogMixin, TomodachiMenu, TomodachiContext
+from tomodachi.utils.converters import TimeUnit
 
 EmojiProxy = Union[discord.Emoji, discord.PartialEmoji]
 
@@ -166,20 +166,9 @@ class Tools(CogMixin):
 
         await ctx.send(file=file, embed=embed)
 
-    @flags.add_flag("--days", "-d", "-D", type=int, default=0)
-    @flags.add_flag("--hours", "-h", "-H", type=int, default=0)
-    @flags.add_flag("--minutes", "-m", "-M", type=int, default=0)
-    @flags.add_flag("--seconds", "-s", "-S", type=int, default=0)
-    @flags.command(help="Turns time deltas into human readable text")
-    async def humanize(self, ctx: TomodachiContext, **kwargs):
-        delta = timedelta(
-            days=kwargs["days"],
-            hours=kwargs["hours"],
-            minutes=kwargs["minutes"],
-            seconds=kwargs["seconds"],
-        )
-
-        func = functools.partial(humanize.precisedelta, delta)
+    @commands.command(help="Turns time deltas into human readable text")
+    async def humanize(self, ctx: TomodachiContext, time_unit: TimeUnit):
+        func = functools.partial(humanize.precisedelta, time_unit)
         humanized = await asyncio.to_thread(func)
 
         await ctx.send(humanized)
