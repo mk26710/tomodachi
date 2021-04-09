@@ -21,7 +21,7 @@ from tomodachi.utils import HUMANIZED_ACTIVITY, HUMAN_READABLE_FLAGS, make_progr
 class Info(CogMixin):
     @commands.cooldown(1, 3, commands.BucketType.user)
     @flags.add_flag("--steal", "-s", action="store_true")
-    @commands.command(cls=flags.FlagCommand, aliases=("avy", "av"), help="Provides you an avatar of some discord user")
+    @commands.command(cls=flags.FlagCommand, aliases=["avy", "av"], help="Provides you an avatar of some discord user")
     async def avatar(self, ctx: TomodachiContext, user: discord.User = None, **options):
         user = user or ctx.author
 
@@ -50,7 +50,7 @@ class Info(CogMixin):
         await ctx.send(content=f"Re-uploaded avatar of {user} (`{user.id}`)", file=f)
 
     @commands.cooldown(1, 3, commands.BucketType.user)
-    @commands.command(aliases=("ui", "memberinfo", "mi"), help="Shows general information about discord users")
+    @commands.command(aliases=["ui", "memberinfo", "mi"], help="Shows general information about discord users")
     async def userinfo(self, ctx: TomodachiContext, user: Union[discord.Member, discord.User] = None):
         # if target user not specified use author
         user = user or ctx.author
@@ -96,7 +96,7 @@ class Info(CogMixin):
         await ctx.send(embed=embed)
 
     @commands.cooldown(1, 3, commands.BucketType.user)
-    @commands.command(aliases=("si",), help="Brief information about discord servers that I am a part of")
+    @commands.command(aliases=["si"], help="Brief information about discord servers that I am a part of")
     async def serverinfo(self, ctx: TomodachiContext, server: discord.Guild = None):
         guild = server or ctx.guild
 
@@ -131,7 +131,7 @@ class Info(CogMixin):
         await ctx.send(embed=embed)
 
     @commands.cooldown(1, 3, commands.BucketType.user)
-    @commands.command(aliases=("spot",), help="Checks what discord user is listening to")
+    @commands.command(aliases=["spot"], help="Checks what discord user is listening to")
     async def spotify(self, ctx, member: discord.Member = None):
         member = member or ctx.author
         activity = discord.utils.find(lambda a: isinstance(a, discord.Spotify), member.activities)

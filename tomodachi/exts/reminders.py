@@ -174,7 +174,7 @@ class Reminders(CogMixin):
         except (discord.Forbidden, discord.HTTPException):
             pass
 
-    @commands.group(aliases=("r", "reminders"), help="Time based mentions")
+    @commands.group(aliases=["r", "reminders"], help="Time based mentions")
     @commands.cooldown(1, 2.5, commands.BucketType.user)
     async def reminder(self, ctx: commands.Context):
         if not ctx.invoked_subcommand:
@@ -186,7 +186,7 @@ class Reminders(CogMixin):
         await ctx.send(f"Current active reminder: {self.active}")
 
     @reminders_limit()
-    @reminder.command(name="add", aliases=("new", "a"), help="Create new reminder")
+    @reminder.command(name="add", aliases=["new", "a"], help="Create new reminder")
     async def reminder_add(self, ctx: TomodachiContext, to_wait: TimeUnit, *, text: str = "..."):
         now = datetime.utcnow()
         trigger_at = now + to_wait
