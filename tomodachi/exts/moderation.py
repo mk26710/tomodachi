@@ -6,22 +6,17 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Union, Optional
 
 import discord
 from discord.ext import commands
 
-from tomodachi.core import Tomodachi, TomodachiContext
+from tomodachi.core import CogMixin, TomodachiContext
 
 MemberUser = Union[discord.Member, discord.User]
 
 
-class Moderation(commands.Cog):
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
-        self._event = asyncio.Event()
-
+class Moderation(CogMixin):
     async def cog_check(self, ctx):
         if ctx.guild is None:
             raise commands.NoPrivateMessage()

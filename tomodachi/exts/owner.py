@@ -12,14 +12,14 @@ import discord
 from discord.ext import commands
 from asyncpg.exceptions import UniqueViolationError
 
-from tomodachi.core import Tomodachi, TomodachiContext
+from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils.database import blacklisted
 
 
-class Owner(commands.Cog):
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
-        self.deletion_emoji_detector = bot.icon("fuck")
+class Owner(CogMixin):
+    def __init__(self, /, tomodachi):
+        super().__init__(tomodachi)
+        self.deletion_emoji_detector = self.bot.icon("fuck")
 
     async def cog_check(self, ctx: TomodachiContext):
         return await self.bot.is_owner(ctx.author)

@@ -8,14 +8,11 @@ import discord
 from discord.ext import commands
 from sqlalchemy.dialects.postgresql import insert
 
-from tomodachi.core import Tomodachi
+from tomodachi.core import CogMixin
 from tomodachi.utils.database import guilds
 
 
-class Events(commands.Cog):
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
-
+class Events(CogMixin):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         stmt = insert(guilds).values(guild_id=guild.id).on_conflict_do_nothing()

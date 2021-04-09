@@ -10,12 +10,12 @@ import traceback
 import discord
 from discord.ext import flags, commands
 
-from tomodachi.core import Tomodachi, TomodachiContext
+from tomodachi.core import CogMixin, TomodachiContext
 
 
-class ErrorHandler(commands.Cog):
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
+class ErrorHandler(CogMixin):
+    def __init__(self, /, tomodachi):
+        super().__init__(tomodachi)
         self.ignored = (commands.CommandNotFound,)
         # these error types will remain unhandled
         # but also there will be logging with traceback

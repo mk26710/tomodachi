@@ -18,7 +18,7 @@ from sqlalchemy import text
 from discord.ext import commands
 from more_itertools import chunked
 
-from tomodachi.core import Tomodachi, TomodachiContext
+from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils.database import reminders as table
 from tomodachi.utils.converters import EntryID, TimeUnit
 
@@ -53,9 +53,9 @@ class Reminder:
     created_at = attr.ib(type=datetime, default=attr.Factory(datetime.utcnow))
 
 
-class Reminders(commands.Cog):
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
+class Reminders(CogMixin):
+    def __init__(self, /, tomodachi):
+        super().__init__(tomodachi)
         self.cond = asyncio.Condition()
         self.task = asyncio.create_task(self.dispatcher())
         self.active: Optional[Reminder] = None
