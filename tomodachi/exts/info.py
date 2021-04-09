@@ -85,7 +85,8 @@ class Info(CogMixin):
                     embed.add_field(name=f"{HUMANIZED_ACTIVITY[activity.type]}", value=f"{activity.name}", inline=False)
 
             roles = ", ".join(reversed(tuple(r.mention for r in user.roles if "everyone" not in r.name)))
-            embed.add_field(name="Roles", value=roles or "None", inline=False)
+            if roles:
+                embed.add_field(name="Roles", value=roles, inline=False)
 
             joined = "%s (`%s`)" % (humanize.naturaltime(datetime.utcnow() - user.joined_at), user.joined_at)
             embed.add_field(name="Join date", value=f"{self.bot.icon('slowmode')} {joined}", inline=False)
