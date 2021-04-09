@@ -17,15 +17,12 @@ import more_itertools as miter
 from aiohttp import ClientResponseError
 from discord.ext import flags, commands
 
-from tomodachi.core import Tomodachi, TomodachiMenu, TomodachiContext
+from tomodachi.core import CogMixin, TomodachiMenu, TomodachiContext
 
 EmojiProxy = Union[discord.Emoji, discord.PartialEmoji]
 
 
-class Tools(commands.Cog):
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
-
+class Tools(CogMixin):
     @staticmethod
     async def get_image_url(message: discord.Message, user: Union[discord.Member, discord.User] = None):
         url = None

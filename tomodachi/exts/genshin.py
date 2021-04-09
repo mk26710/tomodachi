@@ -12,14 +12,11 @@ import humanize
 from discord.ext import commands
 from jishaku.models import copy_context_with
 
-from tomodachi.core import Tomodachi, TomodachiContext
+from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils.converters import uint
 
 
-class Genshin(commands.Cog):
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
-
+class Genshin(CogMixin):
     @commands.cooldown(1, 5.0, commands.BucketType.user)
     @commands.command(help="Counts how much time left until your resin refills")
     async def resin(

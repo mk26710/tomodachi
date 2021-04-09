@@ -11,7 +11,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from tomodachi.core import Tomodachi, TomodachiMenu, TomodachiContext
+from tomodachi.core import CogMixin, TomodachiMenu, TomodachiContext
 from tomodachi.utils.apis import AniList, AniMedia, MediaType
 
 waifu_categories = (
@@ -88,11 +88,8 @@ class AniListMenu(TomodachiMenu):
             self.embed.add_field(name="Genres", value=", ".join(media.genres))
 
 
-class TwoDimWorld(commands.Cog, name="アニメ"):
+class TwoDimWorld(CogMixin, name="アニメ"):
     __anilist_notice = "Adult content is hidden from non-NSFW channels"
-
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
 
     @commands.is_nsfw()
     @commands.cooldown(1, 7.0, commands.BucketType.user)

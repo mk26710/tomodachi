@@ -7,13 +7,10 @@
 import discord
 from discord.ext import commands
 
-from tomodachi.core import Tomodachi, TomodachiContext, is_manager
+from tomodachi.core import CogMixin, TomodachiContext, is_manager
 
 
-class Default(commands.Cog):
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
-
+class Default(CogMixin):
     @commands.command()
     async def hello(self, ctx: commands.Context):
         await ctx.send(f"Hello, {ctx.author.name}! I'm {ctx.bot.user.name}.")

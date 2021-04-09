@@ -13,7 +13,7 @@ from typing import List, Union, NewType
 import discord
 from discord.ext import commands
 
-from tomodachi.core import Tomodachi, TomodachiContext
+from tomodachi.core import CogMixin, Tomodachi, TomodachiContext
 
 # Type alias for a commands mapping, quite helpful
 Commands = List[Union[commands.Command, commands.Group]]
@@ -46,8 +46,8 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         embed.set_thumbnail(url=self.context.bot.user.avatar_url)
 
         def get_category(command):
-            _cog = command.cog
-            return _cog.qualified_name if _cog is not None else "Uncategorized"
+            _cog: CogMixin = command.cog
+            return _cog.formatted_name if _cog is not None else "Uncategorized"
 
         filtered: Commands = await self.filter_commands(self.context.bot.commands, sort=True, key=get_category)
 
@@ -140,12 +140,12 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         await self.get_destination().send(embed=embed)
 
 
-class TomodachiHelp(commands.Cog):
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
-        self._original_help_command = bot.help_command
-        bot.help_command = TomodachiHelpCommand()
-        bot.help_command.cog = self
+class TomodachiHelp(CogMixin):
+    def __init__(self, /, tomodachi):
+        super().__init__(tomodachi)
+        self._original_help_command = tomodachi.help_command
+        tomodachi.help_command = TomodachiHelpCommand()
+        tomodachi.help_command.cog = self
 
     def cog_unload(self):
         self.bot.help_command = self._original_help_command

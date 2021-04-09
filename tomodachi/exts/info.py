@@ -14,14 +14,11 @@ import humanize
 from aiohttp import ClientResponseError
 from discord.ext import flags, commands
 
-from tomodachi.core import Tomodachi, TomodachiContext
+from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils import HUMANIZED_ACTIVITY, HUMAN_READABLE_FLAGS, make_progress_bar
 
 
-class Info(commands.Cog):
-    def __init__(self, bot: Tomodachi):
-        self.bot = bot
-
+class Info(CogMixin):
     @commands.cooldown(1, 3, commands.BucketType.user)
     @flags.add_flag("--steal", "-s", action="store_true")
     @commands.command(cls=flags.FlagCommand, aliases=("avy", "av"), help="Provides you an avatar of some discord user")
