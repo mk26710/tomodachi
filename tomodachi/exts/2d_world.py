@@ -88,7 +88,7 @@ class AniListMenu(TomodachiMenu):
             self.embed.add_field(name="Genres", value=", ".join(media.genres))
 
 
-class TwoDimWorld(commands.Cog, name="2D-World"):
+class TwoDimWorld(commands.Cog, name="アニメ"):
     __anilist_notice = "Adult content is hidden from non-NSFW channels"
 
     def __init__(self, bot: Tomodachi):
