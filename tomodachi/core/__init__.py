@@ -5,6 +5,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from .bot import *
+from .cog import *
 from .icons import *
 from .menus import *
 from .checks import *
