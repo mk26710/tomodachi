@@ -4,85 +4,55 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import sys
 import asyncio
 import logging
 import os.path
-import importlib
-from typing import Any
 
-import discord
-from loguru import logger
+import aiohttp
 
 import config
 import patches  # noqa
-from intercept_handler import InterceptHandler
 from tomodachi.core.bot import Tomodachi
 from tomodachi.utils.database import db
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 
-try:
-    uvloop: Any = importlib.import_module("uvloop")
-except ImportError:
-    pass
-else:
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-
-def setup_jishaku():
+async def setup_jishaku():
     # Enforcing jishaku flags
     for flag in config.JISHAKU_FLAGS:
         os.environ[f"JISHAKU_{flag}"] = "True"
 
 
-def setup_logging():
+async def setup_logging():
     # we need to get rid of default handler
-    logger.remove()
-
-    stdout_level = os.environ.get("LOGGING_LEVEL", "INFO")
-    fmt = "{time} - {name} - {level} - {message}"
-
-    logging.getLogger().setLevel(stdout_level)
-    logging.getLogger().handlers = [InterceptHandler()]
-
-    # Root logger
-    logger.add(
-        sys.stderr,
-        colorize=True,
-        level=stdout_level,
-        enqueue=True,
-    )
-
-    # Sink for reminders logs
-    logger.level("REMINDERS", no=1, icon="🕐", color="<blue>")
-
-    logger.add(
-        os.path.join(ROOT_DIR, "logs", "reminders", "{time}.log"),
-        format=fmt,
-        rotation="500 MB",
-        filter="tomodachi.exts.reminders",
-        level="REMINDERS",
-        enqueue=True,
-    )
+    logging.basicConfig(level=logging.INFO)
 
 
-setup_logging()
-setup_jishaku()
+async def main():
+    # Setup all the things
+    await setup_logging()
+    await setup_jishaku()
 
-# Creating database pool
-loop = asyncio.get_event_loop()
-loop.run_until_complete(db.connect())
+    # Create pool connection
+    await db.connect()
 
-# Running the bot
-tomodachi = Tomodachi(ROOT_DIR=ROOT_DIR)
-tomodachi.load_extension("jishaku")
+    # Create new session and start the bot
+    async with aiohttp.ClientSession() as session:
+        tomodachi = Tomodachi(ROOT_DIR=ROOT_DIR, extra_session=session)
+        tomodachi.load_extension("jishaku")
+
+        try:
+            await tomodachi.start(config.TOKEN)
+        finally:
+            await tomodachi.close()
+
 
 try:
-    loop.run_until_complete(tomodachi.start(config.TOKEN))
+    import uvloop
+except ImportError:
+    pass
+else:
+    uvloop.install()
 
-except KeyboardInterrupt:
-    loop.run_until_complete(tomodachi.close())
-
-finally:
-    discord.client._cleanup_loop(loop)  # noqa
+asyncio.run(main())

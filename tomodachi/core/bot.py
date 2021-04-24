@@ -34,6 +34,8 @@ class Tomodachi(commands.AutoShardedBot):
             owner_ids=config.OWNER_IDS,
         )
         self._BotBase__cogs = commands.core._CaseInsensitiveDict()  # noqa
+
+        self.session: aiohttp.ClientSession = kwargs.pop("extra_session")
         self.ROOT_DIR: Union[str, bytes] = kwargs.pop("ROOT_DIR")
 
         # Alias to config module
@@ -55,8 +57,6 @@ class Tomodachi(commands.AutoShardedBot):
 
         # Global rate limit cooldowns mapping
         self.global_rate_limit = commands.CooldownMapping.from_cooldown(10, 10, commands.BucketType.user)
-
-        self.session = aiohttp.ClientSession()
 
         self.loop.create_task(self.once_ready())
 
