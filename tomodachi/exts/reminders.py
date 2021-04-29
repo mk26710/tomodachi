@@ -13,7 +13,6 @@ from datetime import datetime
 import attr
 import discord
 import humanize
-from loguru import logger
 from sqlalchemy import text
 from discord.ext import commands
 from more_itertools import chunked
@@ -65,33 +64,26 @@ class Reminders(CogMixin):
 
     async def dispatcher(self):
         async with self.cond:
-            logger.log("REMINDERS", "Getting reminder...")
             reminder = self.active = await self.get_reminder()
 
             if not reminder:
-                logger.log("REMINDERS", "Reminder not found, pausing the task...")
                 await self.cond.wait()
                 await self.reschedule()
 
-            logger.log("REMINDERS", f"Reminder #{reminder.id} found, sleeping until expires...")
             now = datetime.utcnow()
             if reminder.trigger_at >= now:
                 await discord.utils.sleep_until(reminder.trigger_at)
 
             await self.trigger_reminder(reminder)
-            logger.log("REMINDERS", "Triggered the reminder event")
             await self.reschedule()
 
     async def reschedule(self):
         if not self.task.cancelled() or self.task.done():
-            logger.log("REMINDERS", "Cancelling dispatcher...")
             self.task.cancel()
 
-        logger.log("REMINDERS", "Starting dispatcher...")
         self.task = asyncio.create_task(self.dispatcher())
 
         async with self.cond:
-            logger.log("REMINDERS", "Notifying waiting thread...")
             self.cond.notify_all()
 
     async def get_reminder(self):
@@ -134,7 +126,6 @@ class Reminders(CogMixin):
         # Once the new reminder created dispatcher has to be restarted
         # but only if the currently active reminder happens later than new
         if (self.active and self.active.trigger_at >= reminder.trigger_at) or self.active is None:
-            logger.log("REMINDERS", "New reminder triggers earlier, rescheduling")
             asyncio.create_task(self.reschedule())
 
         return reminder

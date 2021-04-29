@@ -25,7 +25,6 @@ async def setup_jishaku():
 
 
 async def setup_logging():
-    # we need to get rid of default handler
     logging.basicConfig(level=logging.INFO)
 
 
