@@ -72,7 +72,7 @@ class TomodachiMenu(menus.Menu):
         return self.__max_index
 
     async def start(self, ctx: Context, *, channel=None, wait=False):
-        self.can_manage_messages = ctx.guild.me.permissions_in(channel or ctx.channel).manage_messages
+        self.can_manage_messages = ctx.channel.permissions_for(ctx.guild.me).manage_messages
 
         if len(self.entries) > 1:
             return await super().start(ctx, channel=channel, wait=wait)
