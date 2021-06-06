@@ -25,11 +25,11 @@ class Default(CogMixin):
     @config.command(help="Changes prefix of a bot in this server")
     async def prefix(self, ctx: TomodachiContext, new_prefix: str = None):
         if not new_prefix:
-            current_prefix = self.bot.prefixes.get(ctx.guild.id, self.bot.config.DEFAULT_PREFIX)
-            return await ctx.send(f"Prefix in this server is `{discord.utils.escape_markdown(current_prefix)}`")
+            current_prefix = self.bot.prefixes.get(ctx.guild.id) or self.bot.config.DEFAULT_PREFIX
+            return await ctx.send(f"Prefix in this server is `{current_prefix}`")
 
         prefix = await self.bot.update_prefix(ctx.guild.id, new_prefix)
-        await ctx.send(f"Updated prefix in the server to `{discord.utils.escape_markdown(prefix)}`")
+        await ctx.send(f"Updated prefix in the server to `{prefix}`")
 
 
 def setup(bot):
