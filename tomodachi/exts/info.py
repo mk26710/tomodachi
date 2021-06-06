@@ -104,7 +104,8 @@ class Info(CogMixin):
         if guild.description:
             embed.description = f"{guild.description}\n\n{embed.description}"
 
-        embed.set_thumbnail(url=guild.icon_url)
+        if guild.icon:
+            embed.set_thumbnail(url=guild.icon.url)
 
         features = ""
         for feature in guild.features:
@@ -124,7 +125,8 @@ class Info(CogMixin):
         if flagged_members:
             embed.add_field(name="Flags Stats", value=flagged_members, inline=False)
 
-        created = "%s (`%s`)" % (humanize.naturaltime(datetime.utcnow() - guild.created_at), guild.created_at)
+        created_at = arrow.get(guild.created_at)
+        created = "%s (`%s`)" % (humanize.naturaltime(arrow.utcnow() - created_at), created_at)
         embed.add_field(name="Server creation date", value=f"{ctx.icon['slowmode']} {created}", inline=False)
 
         await ctx.send(embed=embed)
