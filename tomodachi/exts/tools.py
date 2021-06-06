@@ -4,10 +4,10 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import io
-import random
 import asyncio
 import functools
+import io
+import random
 from typing import Union
 
 import discord
@@ -17,6 +17,7 @@ from aiohttp import ClientResponseError
 from discord.ext import commands
 
 from tomodachi.core import CogMixin, TomodachiMenu, TomodachiContext
+from tomodachi.utils import helpers
 from tomodachi.utils.converters import TimeUnit
 
 EmojiProxy = Union[discord.Emoji, discord.PartialEmoji]
@@ -29,16 +30,16 @@ class Tools(CogMixin):
 
         if not message.attachments:
             if user is not None:
-                url = str(user.avatar_url)
+                url = helpers.avatar_or_default(user).url
         else:
             url = message.attachments[0].url
 
         return url
 
     @commands.command(description='To provide a sentence as one of options, use quotes "word1 word 2"')
-    async def choose(self, ctx: TomodachiContext, *options: commands.clean_content(escape_markdown=True)):
+    async def choose(self, ctx: TomodachiContext, *options: str):
         """Randomly selects a word or a sentence"""
-        selected = random.choice(options)
+        selected = discord.utils.escape_markdown(random.choice(options))
         await ctx.send(f"\N{SQUARED KATAKANA KOKO} {selected}")
 
     @commands.command()
@@ -111,7 +112,7 @@ class Tools(CogMixin):
                     if e_guild.id == ctx.guild.id:
                         continue
 
-                buff = await emoji.url.read()
+                buff = await emoji.read()
                 created_emoji = await ctx.guild.create_custom_emoji(name=emoji.name, image=buff)
 
                 if created_emoji:
