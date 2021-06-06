@@ -8,14 +8,17 @@ import io
 from typing import Union
 from datetime import datetime
 from collections import Counter
+from datetime import datetime, timezone
+from typing import Union
 
+import arrow
 import discord
 import humanize
 from aiohttp import ClientResponseError
 from discord.ext import flags, commands
 
 from tomodachi.core import CogMixin, TomodachiContext
-from tomodachi.utils import HUMANIZED_ACTIVITY, HUMAN_READABLE_FLAGS, make_progress_bar
+from tomodachi.utils import HUMANIZED_ACTIVITY, make_progress_bar, helpers
 
 
 class Info(CogMixin):
@@ -53,20 +56,14 @@ class Info(CogMixin):
         # if target user not specified use author
         user = user or ctx.author
 
-        embed = discord.Embed(colour=0x2F3136)
-        embed.set_thumbnail(url=f"{user.avatar_url}")
+        embed = discord.Embed(colour=0x5865F2)
+        embed.set_thumbnail(url=f"{user.avatar.url}")
 
         embed.add_field(name="Username", value=f"{user}")
         embed.add_field(name="ID", value=f"{user.id}")
 
         if user.public_flags.value > 0:
-            embed.add_field(
-                inline=False,
-                name="Badges",
-                value="\n".join(
-                    f"{self.bot.icon(f.name)} {HUMAN_READABLE_FLAGS[f.name]}" for f in user.public_flags.all()
-                ),
-            )
+            embed.add_field(name="Badges", value="\n".join(helpers.humanize_flags(user.public_flags)), inline=False)
 
         if isinstance(user, discord.Member):
             embed.colour = user.colour
@@ -86,10 +83,12 @@ class Info(CogMixin):
             if roles:
                 embed.add_field(name="Roles", value=roles, inline=False)
 
-            joined = "%s (`%s`)" % (humanize.naturaltime(datetime.utcnow() - user.joined_at), user.joined_at)
+            joined_at = arrow.get(user.joined_at)
+            joined = "%s (`%s`)" % (humanize.naturaltime(arrow.utcnow() - joined_at), joined_at)
             embed.add_field(name="Join date", value=f"{self.bot.icon('slowmode')} {joined}", inline=False)
 
-        created = "%s (`%s`)" % (humanize.naturaltime(datetime.utcnow() - user.created_at), user.created_at)
+        created_at = arrow.get(user.created_at)
+        created = "%s (`%s`)" % (humanize.naturaltime(arrow.utcnow() - created_at), created_at)
         embed.add_field(name="Creation date", value=f"{self.bot.icon('slowmode')} {created}", inline=False)
 
         if await self.bot.is_owner(user):
