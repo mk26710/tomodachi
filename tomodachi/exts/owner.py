@@ -54,8 +54,11 @@ class Owner(CogMixin):
     @commands.command()
     async def steal_avatar(self, ctx: TomodachiContext, user: discord.User):
         """Sets someone's avatar as bots' avatar"""
+        if not user.avatar:
+            return await ctx.send("that entity doesnt have avatar")
+
         embed = discord.Embed(colour=0x2F3136)
-        embed.set_image(url=user.avatar_url)
+        embed.set_image(url=user.avatar.url)
 
         await ctx.send(embed=embed, content="Are you sure that you want me to use this as avatar?\nSay `yes` or `no`.")
 
@@ -68,7 +71,7 @@ class Owner(CogMixin):
             await ctx.send("Timed out.")
         else:
             if message.content.lower() == "yes":
-                b = await user.avatar_url.read()
+                b = await user.avatar.read()
 
                 await self.bot.user.edit(avatar=b)
                 await ctx.send(":ok_hand:")
