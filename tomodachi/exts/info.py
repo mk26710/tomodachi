@@ -6,7 +6,7 @@
 
 import io
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Union
 
 import arrow
@@ -16,7 +16,7 @@ from aiohttp import ClientResponseError
 from discord.ext import flags, commands
 
 from tomodachi.core import CogMixin, TomodachiContext
-from tomodachi.utils import HUMANIZED_ACTIVITY, make_progress_bar, helpers
+from tomodachi.utils import make_progress_bar, humanize_activity, humanize_flags
 
 
 class Info(CogMixin):
@@ -61,7 +61,7 @@ class Info(CogMixin):
         embed.add_field(name="ID", value=f"{user.id}")
 
         if user.public_flags.value > 0:
-            embed.add_field(name="Badges", value="\n".join(helpers.humanize_flags(user.public_flags)), inline=False)
+            embed.add_field(name="Badges", value="\n".join(humanize_flags(user.public_flags)), inline=False)
 
         if isinstance(user, discord.Member):
             embed.colour = user.colour
@@ -75,7 +75,7 @@ class Info(CogMixin):
                     embed.add_field(name="Listening", value=value, inline=False)
 
                 else:
-                    embed.add_field(name=f"{HUMANIZED_ACTIVITY[activity.type]}", value=f"{activity.name}", inline=False)
+                    embed.add_field(name=humanize_activity(activity.type), value=f"{activity.name}", inline=False)
 
             if len(user.roles) > 1:
                 roles = ", ".join(reversed(tuple(r.mention for r in user.roles if "everyone" not in r.name)))

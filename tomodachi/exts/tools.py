@@ -17,7 +17,7 @@ from aiohttp import ClientResponseError
 from discord.ext import commands
 
 from tomodachi.core import CogMixin, TomodachiMenu, TomodachiContext
-from tomodachi.utils import helpers
+from tomodachi.utils import avatar_or_default
 from tomodachi.utils.converters import TimeUnit
 
 EmojiProxy = Union[discord.Emoji, discord.PartialEmoji]
@@ -30,7 +30,7 @@ class Tools(CogMixin):
 
         if not message.attachments:
             if user is not None:
-                url = helpers.avatar_or_default(user).url
+                url = avatar_or_default(user).url
         else:
             url = message.attachments[0].url
 
