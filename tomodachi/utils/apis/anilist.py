@@ -6,9 +6,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from enum import Enum
 from typing import ClassVar, Optional, TypedDict
-from datetime import datetime, timezone
 
 from aiohttp import ClientSession
 
