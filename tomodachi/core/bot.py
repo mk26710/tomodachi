@@ -14,7 +14,7 @@ import discord
 from discord.ext import commands
 
 import config
-from tomodachi.utils import AniList, make_intents, make_cache_policy
+from tomodachi.utils import AniList, make_intents
 from tomodachi.core.icons import Icons
 from tomodachi.core.context import TomodachiContext
 from tomodachi.utils.database import db
@@ -30,7 +30,6 @@ class Tomodachi(commands.AutoShardedBot):
             max_messages=150,
             command_prefix=self.get_prefix,
             intents=make_intents(),
-            member_cache_flags=make_cache_policy(),
             owner_ids=config.OWNER_IDS,
         )
         self._BotBase__cogs = commands.core._CaseInsensitiveDict()  # noqa

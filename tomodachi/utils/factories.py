@@ -6,7 +6,7 @@
 
 import discord
 
-__all__ = ["make_intents", "make_cache_policy"]
+__all__ = ["make_intents"]
 
 
 def make_intents():
@@ -19,12 +19,4 @@ def make_intents():
         bans=True,
         invites=True,
         messages=True,
-    )
-
-
-def make_cache_policy():
-    return discord.MemberCacheFlags(
-        joined=True,
-        online=True,
-        voice=False,
     )
