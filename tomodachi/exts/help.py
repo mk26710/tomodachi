@@ -35,7 +35,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
 
     def format_command(self, command: Union[commands.Command, commands.Group]):
         fmt = "`{0}{1}` — {2}\n" if command.short_doc else "`{0}{1}`\n"
-        return fmt.format(self.clean_prefix, command.qualified_name, command.short_doc)
+        return fmt.format(self.context.prefix, command.qualified_name, command.short_doc)
 
     async def send_bot_help(self, mapping):
         embed = discord.Embed(
@@ -43,7 +43,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
             description=self.get_opening_note(),
         )
 
-        embed.set_thumbnail(url=self.context.bot.user.avatar_url)
+        embed.set_thumbnail(url=self.context.bot.user.avatar.url)
 
         def get_category(command):
             _cog: CogMixin = command.cog
