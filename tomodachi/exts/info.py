@@ -5,8 +5,6 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import io
-from typing import Union
-from datetime import datetime
 from collections import Counter
 from datetime import datetime, timezone
 from typing import Union
@@ -79,8 +77,8 @@ class Info(CogMixin):
                 else:
                     embed.add_field(name=f"{HUMANIZED_ACTIVITY[activity.type]}", value=f"{activity.name}", inline=False)
 
-            roles = ", ".join(reversed(tuple(r.mention for r in user.roles if "everyone" not in r.name)))
-            if roles:
+            if len(user.roles) > 1:
+                roles = ", ".join(reversed(tuple(r.mention for r in user.roles if "everyone" not in r.name)))
                 embed.add_field(name="Roles", value=roles, inline=False)
 
             joined_at = arrow.get(user.joined_at)
