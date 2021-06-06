@@ -25,27 +25,25 @@ class Info(CogMixin):
     async def avatar(self, ctx: TomodachiContext, user: discord.User = None, **options):
         user = user or ctx.author
 
-        urls = " | ".join(f"[{ext}]({user.avatar_url_as(format=ext)})" for ext in ("png", "jpeg", "webp"))
-        if user.is_avatar_animated():
-            urls += f" | [gif]({user.avatar_url_as(format='gif')})"
+        urls = " | ".join(f"[{ext}]({user.avatar.with_static_format(format=ext)})" for ext in ("png", "jpeg", "webp"))
+        if user.avatar.is_animated():
+            urls += f" | [gif]({user.avatar.url})"
 
         embed = discord.Embed(
             colour=0x2F3136,
             description=urls,
             title=f"{user} ({user.id})",
         )
-        embed.set_image(url=f"{user.avatar_url}")
+        embed.set_image(url=f"{user.avatar.url}")
 
         if not options["steal"]:
             return await ctx.send(embed=embed)
 
-        filename = "{}.{}".format(user.id, "png" if not user.is_avatar_animated() else "gif")
-        asset = user.avatar_url_as(static_format="png")
-
         buf = io.BytesIO()
-        await asset.save(buf)
+        await user.avatar.save(buf)
 
-        f = discord.File(buf, filename)
+        ext = ".gif" if user.avatar.is_animated() else ".png"
+        f = discord.File(buf, user.name + user.discriminator + ext)
 
         await ctx.send(content=f"Re-uploaded avatar of {user} (`{user.id}`)", file=f)
 
