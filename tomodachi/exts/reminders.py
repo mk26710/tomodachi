@@ -7,19 +7,20 @@
 #  Heavily inspired by https://github.com/Rapptz/RoboDanny <
 
 import asyncio
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 import attr
 import discord
 import humanize
-from sqlalchemy import text
 from discord.ext import commands
 from more_itertools import chunked
+from sqlalchemy import text
 
 from tomodachi.core import CogMixin, TomodachiContext
-from tomodachi.utils.database import reminders as table
+from tomodachi.utils import helpers
 from tomodachi.utils.converters import EntryID, TimeUnit
+from tomodachi.utils.database import reminders as table
 
 
 def reminders_limit():
@@ -72,7 +73,8 @@ class Reminders(CogMixin):
 
             now = datetime.utcnow()
             if reminder.trigger_at >= now:
-                await discord.utils.sleep_until(reminder.trigger_at)
+                delta = (reminder.trigger_at - now).total_seconds()
+                await asyncio.sleep(delta)
 
             await self.trigger_reminder(reminder)
             await self.reschedule()
@@ -153,7 +155,7 @@ class Reminders(CogMixin):
         embed = discord.Embed()
         embed.title = f"Reminder #{reminder.id}" if reminder.id is not None else "Short Reminder"
         embed.description = f"You asked me {when} ago [here]({jump_url}) to remind you of:\n\n{reminder.contents}"
-        embed.set_footer(text=f"Reminder for {author}", icon_url=f"{author.avatar_url}")
+        embed.set_footer(text=f"Reminder for {author}", icon_url=helpers.avatar_or_default(author).url)
 
         try:
             # in case of channel gets deleted, DM the user
@@ -223,7 +225,7 @@ class Reminders(CogMixin):
         entries = ["\n".join(chunk) for chunk in chunked(lines, 10)]
 
         menu = ctx.new_menu(entries)
-        menu.embed.set_author(name=f"Requested by {ctx.author}", icon_url=ctx.author.avatar_url)
+        menu.embed.set_author(name=f"Requested by {ctx.author}", icon_url=helpers.avatar_or_default(ctx.author).url)
 
         await menu.start(ctx)
 
@@ -241,9 +243,9 @@ class Reminders(CogMixin):
         embed.title = f"Reminder #{reminder.id}"
         embed.description = f"{reminder.contents[0:2000]}"
         embed.timestamp = reminder.trigger_at
-        embed.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=f"{ctx.author}", icon_url=helpers.avatar_or_default(ctx.author).url)
 
-        await ctx.send(embed=embed, delete_after=120.0)
+        await ctx.send(embed=embed, delete_after=120)
 
     @reminder.command(name="remove", aliases=["rmv", "delete", "del"], help="Remove some reminder from your list")
     async def reminder_remove(self, ctx: TomodachiContext, reminder_id: EntryID):
