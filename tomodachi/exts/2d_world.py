@@ -105,7 +105,9 @@ class TwoDimWorld(CogMixin, name="アニメ"):
 
         embed = discord.Embed(timestamp=datetime.utcnow())
         embed.set_image(url=data["url"])
-        embed.set_footer(icon_url=ctx.author.avatar_url, text=f"Requested by {ctx.author}")
+
+        icon_url = avatar.url if (avatar := ctx.author.avatar) else ctx.author.default_avatar
+        embed.set_footer(icon_url=icon_url, text=f"Requested by {ctx.author}")
 
         await ctx.send(embed=embed)
 
