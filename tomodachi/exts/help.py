@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import List, Union, NewType
+from typing import List, Union
 
 import discord
 from discord.ext import commands
@@ -16,7 +16,6 @@ from tomodachi.core import CogMixin, TomodachiContext
 
 # Type alias for a commands mapping, quite helpful
 Commands = List[Union[commands.Command, commands.Group]]
-CogType = NewType("CogType", commands.Cog)
 
 
 class TomodachiHelpCommand(commands.MinimalHelpCommand):
@@ -67,7 +66,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         channel = self.get_destination()
         await channel.send(embed=embed)
 
-    async def send_cog_help(self, cog: CogType):
+    async def send_cog_help(self, cog: CogMixin):
         description = ""
 
         embed = discord.Embed(title=cog.qualified_name, colour=self._e_colour)
