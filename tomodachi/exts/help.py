@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import io
 import itertools
 from typing import List, Union, NewType
 
@@ -37,7 +36,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         fmt = "`{0}{1}` — {2}\n" if command.short_doc else "`{0}{1}`\n"
         return fmt.format(self.context.prefix, command.qualified_name, command.short_doc)
 
-    async def send_bot_help(self, mapping):
+    async def send_bot_help(self, _):
         embed = discord.Embed(
             colour=self._e_colour,
             description=self.get_opening_note(),
@@ -69,42 +68,36 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         await channel.send(embed=embed)
 
     async def send_cog_help(self, cog: CogType):
-        buff = io.StringIO()
+        description = ""
 
         embed = discord.Embed(title=cog.qualified_name, colour=self._e_colour)
-        embed.set_thumbnail(url=self.context.bot.user.avatar_url)
+        embed.set_thumbnail(url=self.context.bot.user.avatar.url)
 
         if cog.description:
-            buff.writelines([cog.description, "\n\n"])
+            description += f"{cog.description}\n\n"
 
         filtered: Commands = await self.filter_commands(cog.get_commands(), sort=True)
 
         if filtered:
             for command in filtered:
-                buff.write(self.format_command(command))
+                description += self.format_command(command)
 
-        if buff.seekable():
-            buff.seek(0)
-
-        embed.description = buff.getvalue()
+        embed.description = description
 
         await self.get_destination().send(embed=embed)
 
     async def send_group_help(self, group):
-        buff = io.StringIO()
+        description = ""
 
         embed = discord.Embed(colour=self._e_colour, title=f"{group} commands")
-        embed.set_thumbnail(url=self.context.bot.user.avatar_url)
+        embed.set_thumbnail(url=self.context.bot.user.avatar.url)
 
         filtered: Commands = await self.filter_commands(group.commands, sort=True)
         if filtered:
             for command in filtered:
-                buff.write(self.format_command(command))
+                description += self.format_command(command)
 
-        if buff.seekable():
-            buff.seek(0)
-
-        embed.description = buff.getvalue()
+        embed.description = description
 
         await self.get_destination().send(embed=embed)
 
