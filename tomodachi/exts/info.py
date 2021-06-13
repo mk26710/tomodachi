@@ -5,9 +5,9 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import io
-from collections import Counter
-from datetime import datetime
 from typing import Union
+from datetime import datetime
+from collections import Counter
 
 import arrow
 import discord
@@ -16,10 +16,10 @@ from aiohttp import ClientResponseError
 from discord.ext import flags, commands
 
 from tomodachi.core import CogMixin, TomodachiContext
-from tomodachi.utils import make_progress_bar, humanize_activity, humanize_flags
+from tomodachi.utils import humanize_flags, humanize_activity, make_progress_bar
 
 
-class Info(CogMixin):
+class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=742312550821134396)):
     @commands.cooldown(1, 3, commands.BucketType.user)
     @flags.add_flag("--steal", "-s", action="store_true")
     @commands.command(cls=flags.FlagCommand, aliases=["avy", "av"], help="Provides you an avatar of some discord user")
