@@ -1,5 +1,5 @@
-from collections import defaultdict
 from typing import Tuple
+from collections import defaultdict
 
 import discord
 
@@ -11,6 +11,7 @@ __all__ = ["humanize_flags", "avatar_or_default", "make_intents", "make_progress
 _HUMAN_READABLE_FLAGS = {
     "staff": "Discord Staff",
     "partner": "Partnered Server Owner",
+    "discord_certified_moderator": "Discord Certified Moderator",
     "hypesquad": "HypeSquad Events",
     "bug_hunter": "Discord Bug Hunter",
     "bug_hunter_level_2": "Discord Bug Hunter",
