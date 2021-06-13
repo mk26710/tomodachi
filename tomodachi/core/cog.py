@@ -11,6 +11,7 @@ import functools
 from typing import TYPE_CHECKING, Optional
 
 from discord.ext import commands
+from discord.partial_emoji import PartialEmoji
 
 if TYPE_CHECKING:
     from tomodachi.core.bot import Tomodachi
@@ -26,7 +27,7 @@ class CogABCMeta(commands.CogMeta, abc.ABCMeta):
         except KeyError:
             icon = None
         new_mcs = super().__new__(mcs, *args, **kwargs)
-        new_mcs._icon_label = icon
+        new_mcs.icon = icon
         return new_mcs
 
 
@@ -35,21 +36,13 @@ class Mixin(metaclass=abc.ABCMeta):
 
 
 class CogMixin(Mixin, commands.Cog, metaclass=CogABCMeta):
-    _icon_label: Optional[str]
+    icon: Optional[PartialEmoji]
 
     def __init__(self, /, tomodachi):
         self.bot: Tomodachi = tomodachi
 
     @functools.cached_property
-    def icon(self):
-        if self._icon_label is not None:
-            return self.bot.icon[self._icon_label]
-
-        return None
-
-    @functools.cached_property
     def formatted_name(self):
         if self.icon is not None:
             return f"{self.icon} {self.qualified_name}"
-
-        return f"{self.qualified_name}"
+        return self.qualified_name
