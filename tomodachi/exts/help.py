@@ -69,7 +69,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
     async def send_cog_help(self, cog: CogMixin):
         description = ""
 
-        embed = discord.Embed(title=cog.qualified_name, colour=self._e_colour)
+        embed = discord.Embed(title=cog.formatted_name, colour=self._e_colour)
         embed.set_thumbnail(url=self.context.bot.user.avatar.url)
 
         if cog.description:
