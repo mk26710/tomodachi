@@ -6,8 +6,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Union, Optional
+from contextlib import suppress
 
 import aiohttp
 import discord
@@ -18,6 +20,7 @@ from tomodachi.utils import AniList, make_intents
 from tomodachi.core.icons import Icons
 from tomodachi.core.context import TomodachiContext
 from tomodachi.utils.database import db
+from tomodachi.core.exceptions import AlreadyBlacklisted
 
 __all__ = ["Tomodachi"]
 
@@ -45,8 +48,8 @@ class Tomodachi(commands.AutoShardedBot):
         self.pool = db.pool
 
         self.prefixes = {}
-        # tuple with user ids
-        self.blacklist = ()
+        # list with user ids
+        self.blacklist = []
 
         # Alias to Icons singleton
         self.icon = Icons()
@@ -55,7 +58,7 @@ class Tomodachi(commands.AutoShardedBot):
         self.traceback_log: Optional[discord.TextChannel] = None
 
         # Global rate limit cooldowns mapping
-        self.global_rate_limit = commands.CooldownMapping.from_cooldown(10, 10, commands.BucketType.user)
+        self.rate_limits = commands.CooldownMapping.from_cooldown(10, 10, commands.BucketType.user)
 
         self.loop.create_task(self.once_ready())
 
@@ -93,15 +96,21 @@ class Tomodachi(commands.AutoShardedBot):
             return
 
         ctx = await self.get_context(message)
+        if ctx.command is None:
+            return
 
-        bucket = self.global_rate_limit.get_bucket(ctx.message)
+        bucket = self.rate_limits.get_bucket(ctx.message)
         retry_after = bucket.update_rate_limit()
 
-        if retry_after and ctx.author.id != self.owner_id:
-            return await message.channel.send(
-                content=f"You are being globally rate limited. Please, wait `{retry_after:.2f}` seconds.",
-                delete_after=retry_after,
-            )
+        if retry_after:
+            # not being detected by the global error handler
+            # probably have to figure out why and how to fix
+            # raise commands.CommandOnCooldown(bucket, retry_after)
+
+            # in order to prevent spamming from the bot, we block
+            # the user until they are able to use commands again
+            asyncio.create_task(self.temp_block(ctx.author.id, retry_after))
+            return await ctx.reply(f"You are being rate limited for `{retry_after:.2f}` seconds.")
 
         await self.invoke(ctx)
 
@@ -113,13 +122,25 @@ class Tomodachi(commands.AutoShardedBot):
 
         self.prefixes.update({k: v for k, v in map(tuple, records)})
 
+    async def temp_block(self, user_id: int, delay: Union[float, int]):
+        """Temporary adds a user by their ID to the bot's blacklist"""
+        if user_id in self.blacklist:
+            raise AlreadyBlacklisted(f"{user_id} is already blacklisted, failed to blacklist them temporarly.")
+
+        self.blacklist.append(user_id)
+        if delay:
+            await asyncio.sleep(delay)
+
+        with suppress(ValueError):
+            self.blacklist.remove(user_id)
+
     async def fetch_blacklist(self):
         await self.db.wait_until_connected()
 
         async with self.pool.acquire() as conn:
             records = await conn.fetch("SELECT DISTINCT * FROM blacklisted;")
 
-        self.blacklist = tuple(r["user_id"] for r in records)
+        self.blacklist = [r["user_id"] for r in records]
 
     async def once_ready(self):
         await self.wait_until_ready()
