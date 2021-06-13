@@ -7,20 +7,20 @@
 #  Heavily inspired by https://github.com/Rapptz/RoboDanny <
 
 import asyncio
-from datetime import datetime
 from typing import Optional
+from datetime import datetime
 
 import attr
 import discord
 import humanize
+from sqlalchemy import text
 from discord.ext import commands
 from more_itertools import chunked
-from sqlalchemy import text
 
 from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils import helpers
-from tomodachi.utils.converters import EntryID, TimeUnit
 from tomodachi.utils.database import reminders as table
+from tomodachi.utils.converters import EntryID, TimeUnit
 
 
 def reminders_limit():
@@ -53,7 +53,7 @@ class Reminder:
     created_at = attr.ib(type=datetime, default=attr.Factory(datetime.utcnow))
 
 
-class Reminders(CogMixin):
+class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
     def __init__(self, /, tomodachi):
         super().__init__(tomodachi)
         self.cond = asyncio.Condition()

@@ -9,14 +9,14 @@ from __future__ import annotations
 import asyncio
 
 import discord
-from asyncpg.exceptions import UniqueViolationError
 from discord.ext import commands
+from asyncpg.exceptions import UniqueViolationError
 
 from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils.database import blacklisted
 
 
-class Owner(CogMixin):
+class Owner(CogMixin, icon=discord.PartialEmoji(name="staff", id=853551080344125442)):
     def __init__(self, /, tomodachi):
         super().__init__(tomodachi)
         self.deletion_emoji_detector = self.bot.icon("fuck")

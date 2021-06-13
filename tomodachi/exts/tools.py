@@ -4,10 +4,10 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import asyncio
-import functools
 import io
 import random
+import asyncio
+import functools
 from typing import Union
 
 import discord
@@ -23,7 +23,7 @@ from tomodachi.utils.converters import TimeUnit
 EmojiProxy = Union[discord.Emoji, discord.PartialEmoji]
 
 
-class Tools(CogMixin):
+class Tools(CogMixin, icon=discord.PartialEmoji(name=":tools:")):
     @staticmethod
     async def get_image_url(message: discord.Message, user: Union[discord.Member, discord.User] = None):
         url = None

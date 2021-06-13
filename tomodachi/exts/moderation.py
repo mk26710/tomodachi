@@ -16,7 +16,7 @@ from tomodachi.core import CogMixin, TomodachiContext
 MemberUser = Union[discord.Member, discord.User]
 
 
-class Moderation(CogMixin):
+class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_moderator", id=853548115756187648)):
     async def cog_check(self, ctx):
         if ctx.guild is None:
             raise commands.NoPrivateMessage()

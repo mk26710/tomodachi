@@ -5,9 +5,10 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import asyncio
-from datetime import timedelta
 from typing import Optional
+from datetime import timedelta
 
+import discord
 import humanize
 from discord.ext import commands
 from jishaku.models import copy_context_with
@@ -16,7 +17,7 @@ from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils.converters import uint
 
 
-class Genshin(CogMixin):
+class Genshin(CogMixin, icon=discord.PartialEmoji(name="cryo", id=853553127541702679)):
     @commands.cooldown(1, 5.0, commands.BucketType.user)
     @commands.command(help="Counts how much time left until your resin refills")
     async def resin(
