@@ -13,6 +13,10 @@ class Blacklisted(CommandError):
     pass
 
 
+class AlreadyBlacklisted(CommandError):
+    pass
+
+
 class AniListException(CommandError):
     def __init__(self, data):
         self.data = data
