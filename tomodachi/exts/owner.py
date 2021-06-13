@@ -16,7 +16,7 @@ from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils.database import blacklisted
 
 
-class Owner(CogMixin, icon=discord.PartialEmoji(name="staff", id=853551080344125442)):
+class Owner(CogMixin, icon=discord.PartialEmoji(name="developer", id=853555901050781696)):
     def __init__(self, /, tomodachi):
         super().__init__(tomodachi)
         self.deletion_emoji_detector = self.bot.icon("fuck")
