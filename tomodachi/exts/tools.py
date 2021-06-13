@@ -28,12 +28,11 @@ class Tools(CogMixin, icon=discord.PartialEmoji(name=":tools:")):
     async def get_image_url(message: discord.Message, user: Union[discord.Member, discord.User] = None):
         url = None
 
-        if not message.attachments:
-            if user is not None:
-                url = avatar_or_default(user).url
-        else:
+        if message.attachments:
             url = message.attachments[0].url
 
+        elif user is not None:
+            url = avatar_or_default(user).url
         return url
 
     @commands.command(description='To provide a sentence as one of options, use quotes "word1 word 2"')
