@@ -4,20 +4,70 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from __future__ import annotations
+
 import asyncio
-from typing import Optional
-from datetime import timedelta
+from typing import Callable, Optional, Coroutine
+from datetime import datetime, timedelta
 
 import discord
 import humanize
 from discord.ext import commands
-from jishaku.models import copy_context_with
 
 from tomodachi.core import CogMixin, TomodachiContext
+from tomodachi.exts.reminders import Reminder
 from tomodachi.utils.converters import uint
 
 
+class CreateReminderView(discord.ui.View):
+    def __init__(self, callback: Callable[[discord.Interaction], Coroutine], *, timeout=60.0):
+        self.callback = callback
+
+        super().__init__(timeout=timeout)
+
+    @discord.ui.button(label="Remind me about that")
+    async def btn(self, _, interaction: discord.Interaction):
+        await self.callback(interaction, self.stop)
+
+
 class Genshin(CogMixin, icon=discord.PartialEmoji(name="cryo", id=853553127541702679)):
+    def reminder_callback(self, message: discord.Message, delta: timedelta, amount: int):
+        async def callback(interaction: discord.Interaction, stop: Callable):
+            if interaction.user.id != message.author.id:
+                return await interaction.response.send("You can't interact with others buttons!", ephemeral=True)
+
+            now = datetime.utcnow()
+            trigger_at = now + delta
+
+            reminder = Reminder(
+                created_at=now,
+                trigger_at=trigger_at,
+                author_id=message.author.id,
+                guild_id=message.guild.id,
+                channel_id=message.channel.id,
+                message_id=message.id,
+                contents=f"Genshin Impact: you now have {amount} resin!",
+            )
+
+            reminder = await self.bot.get_cog("Reminders").create_reminder(reminder)
+
+            identifier = ""
+            if reminder.id:
+                identifier = f" (#{reminder.id})"
+
+            when = await asyncio.to_thread(
+                humanize.precisedelta,
+                reminder.trigger_at - reminder.created_at,
+                format="%0.0f",
+            )
+
+            await interaction.response.send_message(
+                f":ok_hand: I will remind you about this in {when}" + identifier, ephemeral=True
+            )
+            stop()
+
+        return callback
+
     @commands.cooldown(1, 5.0, commands.BucketType.user)
     @commands.command(help="Counts how much time left until your resin refills")
     async def resin(
@@ -33,29 +83,11 @@ class Genshin(CogMixin, icon=discord.PartialEmoji(name="cryo", id=85355312754170
         to_wait = timedelta(minutes=((needed - current) * 8))
         h_delta = await asyncio.to_thread(humanize.precisedelta, to_wait)
 
-        await ctx.send(f"You will have {needed} resin **in {h_delta}**.")
-
         if not remind:
-            return
-
-        emoji = ctx.icon("slowmode")
-
-        msg = await ctx.send(f"React with {emoji} to create a reminder!")
-        await msg.add_reaction(emoji)
-
-        def check(reaction, user):
-            return user.id == ctx.author.id and reaction.emoji.id == emoji.id and reaction.message.id == msg.id
-
-        try:
-            await self.bot.wait_for("reaction_add", timeout=30.0, check=check)
-        except asyncio.TimeoutError:
-            pass
+            await ctx.send(f"You will have {needed} resin **in {h_delta}**.")
         else:
-            command_string = f"{ctx.prefix}reminder add {to_wait.seconds}s Genshin Impact: {needed} resin refilled!"
-            alt_ctx = await copy_context_with(ctx, author=ctx.author, content=command_string)
-            await alt_ctx.command.invoke(alt_ctx)
-        finally:
-            await msg.delete()
+            view = CreateReminderView(self.reminder_callback(ctx.message, to_wait, needed))
+            await ctx.send(f"You will have {needed} resin **in {h_delta}**.", view=view)
 
 
 def setup(bot):
