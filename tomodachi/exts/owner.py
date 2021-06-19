@@ -13,7 +13,6 @@ from discord.ext import commands
 from asyncpg.exceptions import UniqueViolationError
 
 from tomodachi.core import CogMixin, TomodachiContext
-from tomodachi.utils.database import blacklisted
 
 
 class Owner(CogMixin, icon=discord.PartialEmoji(name="developer", id=853555901050781696)):
@@ -33,23 +32,32 @@ class Owner(CogMixin, icon=discord.PartialEmoji(name="developer", id=85355590105
             if m.author.id == self.bot.user.id:
                 await m.delete()
 
-    @commands.command()
-    async def block(self, ctx: TomodachiContext, target: discord.User, *, reason: str = None):
-        try:
-            query = blacklisted.insert().values(user_id=target.id, reason=reason or "Because...")
-            await self.bot.db.execute(query)
-        except UniqueViolationError:
-            await ctx.send("user is blocked already")
-        else:
-            await self.bot.fetch_blacklist()
-            await ctx.send(":ok_hand:")
+    @commands.command(aliases=["block", "bl"])
+    async def blacklist(self, ctx: TomodachiContext, target: discord.User, *, reason: str = "Just because."):
+        async with self.bot.db.pool.acquire() as conn:
+            async with conn.transaction():
+                query = "INSERT INTO blacklisted (user_id, reason) VALUES ($1, $2);"
 
-    @commands.command()
-    async def unblock(self, ctx: TomodachiContext, target: discord.User):
-        query = blacklisted.delete().where(blacklisted.c.user_id == target.id).returning()
-        await self.bot.db.execute(query)
-        await self.bot.fetch_blacklist()
-        await ctx.send(":ok_hand:")
+                try:
+                    await conn.execute(query, target.id, reason)
+                except UniqueViolationError:
+                    await ctx.send(f":thinking_face: **{target}** (`{target.id}`) is already blacklisted.")
+                else:
+                    await ctx.send(f":ok_hand: **{target}** (`{target.id}`) is blacklisted now.")
+
+            await self.bot.fetch_blacklist()
+
+    @commands.command(aliases=["unblock", "unbl"])
+    async def unblacklist(self, ctx: TomodachiContext, target: discord.User):
+        async with self.bot.db.pool.acquire() as conn:
+            query = "DELETE FROM blacklisted WHERE user_id = $1 RETURNING true;"
+            value = await conn.fetchval(query, target.id)
+
+        if value:
+            await self.bot.fetch_blacklist()
+            await ctx.send(f":ok_hand: **{target}** (`{target.id}`) is not blacklisted anymore.")
+        else:
+            await ctx.send(f":thinking_face: **{target}** (`{target.id}`) is not on the blacklist.")
 
     @commands.command()
     async def steal_avatar(self, ctx: TomodachiContext, user: discord.User):

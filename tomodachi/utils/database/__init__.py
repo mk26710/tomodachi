@@ -5,4 +5,3 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from .instance import *
-from .schema import *

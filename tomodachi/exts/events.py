@@ -6,17 +6,15 @@
 
 import discord
 from discord.ext import commands
-from sqlalchemy.dialects.postgresql import insert
 
 from tomodachi.core import CogMixin
-from tomodachi.utils.database import guilds
 
 
 class Events(CogMixin):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
-        stmt = insert(guilds).values(guild_id=guild.id).on_conflict_do_nothing()
-        await self.bot.db.execute(stmt)
+        query = "INSERT INTO guilds (guild_id, prefix) VALUES ($1, $2) ON CONFLICT DO NOTHING;"
+        await self.bot.db.pool.execute(query, guild.id, self.bot.config.DEFAULT_PREFIX)
 
 
 def setup(bot):
