@@ -6,15 +6,14 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Callable, Optional, Coroutine
 from datetime import datetime, timedelta
 
 import discord
-import humanize
 from discord.ext import commands
 
 from tomodachi.core import CogMixin, TomodachiContext
+from tomodachi.utils import timestamp
 from tomodachi.exts.reminders import Reminder
 from tomodachi.utils.converters import uint
 
@@ -55,14 +54,10 @@ class Genshin(CogMixin, icon=discord.PartialEmoji(name="cryo", id=85355312754170
             if reminder.id:
                 identifier = f" (#{reminder.id})"
 
-            when = await asyncio.to_thread(
-                humanize.precisedelta,
-                reminder.trigger_at - reminder.created_at,
-                format="%0.0f",
-            )
+            when = timestamp(trigger_at)
 
             await interaction.response.send_message(
-                f":ok_hand: I will remind you about this in {when}" + identifier, ephemeral=True
+                f":ok_hand: I will remind you about this on {when}{identifier}", ephemeral=True
             )
             stop()
 
@@ -80,14 +75,14 @@ class Genshin(CogMixin, icon=discord.PartialEmoji(name="cryo", id=85355312754170
         if current < 0 or current > 160 or needed < current:
             return await ctx.send("You either reached the cap or trying to put invalid amount.")
 
-        to_wait = timedelta(minutes=((needed - current) * 8))
-        h_delta = await asyncio.to_thread(humanize.precisedelta, to_wait)
+        delta = timedelta(minutes=((needed - current) * 8))
+        humanized = timestamp(datetime.now() + delta)
 
         if not remind:
-            await ctx.send(f"You will have {needed} resin **in {h_delta}**.")
+            await ctx.send(f"You will have {needed} resin **{humanized:R}**.")
         else:
-            view = CreateReminderView(self.reminder_callback(ctx.message, to_wait, needed))
-            await ctx.send(f"You will have {needed} resin **in {h_delta}**.", view=view)
+            view = CreateReminderView(self.reminder_callback(ctx.message, delta, needed))
+            await ctx.send(f"You will have {needed} resin **{humanized:R}**.", view=view)
 
 
 def setup(bot):
