@@ -5,7 +5,7 @@ from datetime import datetime
 
 from arrow import Arrow
 
-TimestampFormats = Literal["", "f", "F", "d", "D", "t", "T", "R"]
+TimestampFormattingFlags = Literal["", "f", "F", "d", "D", "t", "T", "R"]
 
 
 class timestamp:
@@ -19,5 +19,5 @@ class timestamp:
         elif isinstance(value, datetime):
             self.value = int(value.timestamp())
 
-    def __format__(self, format_spec: TimestampFormats) -> str:
+    def __format__(self, format_spec: TimestampFormattingFlags) -> str:
         return f"<t:{self.value}:{format_spec}>"
