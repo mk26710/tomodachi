@@ -50,7 +50,7 @@ class Reminder:
     id = attr.ib(type=int, default=None)
     guild_id = attr.ib(type=int, default=None)
     contents = attr.ib(type=str, default="...", repr=False)
-    created_at = attr.ib(type=datetime, default=attr.Factory(datetime.utcnow))
+    created_at = attr.ib(type=datetime, default=attr.Factory(helpers.utcnow))
 
 
 class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
@@ -71,7 +71,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
                 await self.cond.wait()
                 await self.reschedule()
 
-            now = datetime.utcnow()
+            now = helpers.utcnow()
             if reminder.trigger_at >= now:
                 delta = (reminder.trigger_at - now).total_seconds()
                 await asyncio.sleep(delta)
@@ -112,7 +112,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
         self.bot.dispatch("triggered_reminder", reminder=reminder)
 
     async def create_reminder(self, reminder: Reminder):
-        now = datetime.utcnow()
+        now = helpers.utcnow()
         delta = (reminder.trigger_at - now).total_seconds()
 
         if delta <= 60:
@@ -146,7 +146,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
         except discord.NotFound:
             return
 
-        now = datetime.utcnow()
+        now = helpers.utcnow()
         delta = now - reminder.created_at
         when = await asyncio.to_thread(humanize.naturaldelta, delta)
 
@@ -181,7 +181,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
     @reminders_limit()
     @reminder.command(name="add", aliases=["new", "a"], help="Create new reminder")
     async def reminder_add(self, ctx: TomodachiContext, to_wait: TimeUnit, *, text: str = "..."):
-        now = datetime.utcnow()
+        now = helpers.utcnow()
         trigger_at = now + to_wait
 
         reminder = Reminder(
@@ -207,7 +207,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
 
     @reminder.command(name="list", aliases=["ls"])
     async def reminder_list(self, ctx: TomodachiContext):
-        now = datetime.utcnow()
+        now = helpers.utcnow()
 
         query = table.select().where(table.c.author_id == ctx.author.id).order_by(table.c.trigger_at).limit(500)
         rows = await self.bot.db.fetch_all(query)
