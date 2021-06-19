@@ -1,11 +1,16 @@
 from typing import Tuple
+from datetime import datetime, timezone
 from collections import defaultdict
 
 import discord
 
 from tomodachi.core.icons import Icons
 
-__all__ = ["humanize_flags", "avatar_or_default", "make_intents", "make_progress_bar", "humanize_activity"]
+__all__ = ["humanize_flags", "avatar_or_default", "make_intents", "make_progress_bar", "humanize_activity", "utcnow"]
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
 
 
 _HUMAN_READABLE_FLAGS = {
