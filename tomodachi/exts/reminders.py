@@ -12,12 +12,12 @@ from datetime import datetime
 
 import attr
 import discord
-import humanize
 from discord.ext import commands
 from more_itertools import chunked
 
 from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils import helpers
+from tomodachi.utils.timestamp import timestamp
 from tomodachi.utils.converters import EntryID, TimeUnit
 
 
@@ -146,15 +146,12 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
         except discord.NotFound:
             return
 
-        now = helpers.utcnow()
-        delta = now - reminder.created_at
-        when = await asyncio.to_thread(humanize.naturaldelta, delta)
-
+        when = timestamp(reminder.created_at)
         jump_url = "https://discord.com/channels/{0.guild_id}/{0.channel_id}/{0.message_id}".format(reminder)
 
         embed = discord.Embed()
         embed.title = f"Reminder #{reminder.id}" if reminder.id is not None else "Short Reminder"
-        embed.description = f"You asked me {when} ago [here]({jump_url}) to remind you of:\n\n{reminder.contents}"
+        embed.description = f"You asked me on {when:F} [here]({jump_url}) to remind you:\n{reminder.contents}"
         embed.set_footer(text=f"Reminder for {author}", icon_url=helpers.avatar_or_default(author).url)
 
         try:
@@ -195,20 +192,16 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
         )
 
         reminder = await self.create_reminder(reminder)
-
-        delta = reminder.trigger_at - reminder.created_at
-        when = await asyncio.to_thread(humanize.precisedelta, delta, format="%0.0f")
+        when = timestamp(reminder.trigger_at)
 
         identifier = ""
         if reminder.id:
             identifier = f" (#{reminder.id})"
 
-        await ctx.send(f":ok_hand: I will remind you about this in {when}" + identifier)
+        await ctx.send(f":ok_hand: I will remind you about this on {when:F}" + identifier)
 
     @reminder.command(name="list", aliases=["ls"])
     async def reminder_list(self, ctx: TomodachiContext):
-        now = helpers.utcnow()
-
         async with self.bot.db.pool.acquire() as conn:
             query = "SELECT * FROM reminders WHERE author_id = $1 LIMIT 500;"
             stmt = await conn.prepare(query)
@@ -220,8 +213,8 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
 
         lines = []
         for reminder in reminders:
-            when = await asyncio.to_thread(humanize.precisedelta, reminder.trigger_at - now, format="%0.0f")
-            line = f"**(#{reminder.id})** in {when}"
+            when = timestamp(reminder.trigger_at)
+            line = f"**(#{reminder.id})** on {when:F}"
             lines.append(line)
 
         entries = ["\n".join(chunk) for chunk in chunked(lines, 10)]
