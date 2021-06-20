@@ -6,7 +6,6 @@
 
 from .bot import *
 from .cog import *
-from .icons import *
 from .menus import *
 from .checks import *
 from .context import *
