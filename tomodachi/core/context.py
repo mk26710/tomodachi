@@ -30,7 +30,6 @@ class TomodachiContext(commands.Context):
 
     def __init__(self, **attrs):
         super().__init__(**attrs)
-        self.icon = self.bot.icon
 
     @staticmethod
     def new_menu(entries: MenuEntries, *, title: Optional[str] = ""):
