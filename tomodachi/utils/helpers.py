@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import discord
 
-from tomodachi.core.icons import Icons
+from tomodachi.utils.icons import i
 
 __all__ = ["humanize_flags", "avatar_or_default", "make_intents", "make_progress_bar", "humanize_activity", "utcnow"]
 
@@ -42,7 +42,7 @@ def _humanize_iteration_filter(o: Tuple[str, bool]):
 
 def humanize_flags(flags: discord.PublicUserFlags):
     for name, value in filter(_humanize_iteration_filter, flags):
-        yield f"{Icons()(name)} {HUMAN_READABLE_FLAGS[name]}"
+        yield f"{i(name)} {HUMAN_READABLE_FLAGS[name]}"
 
 
 HUMANIZED_ACTIVITY = {

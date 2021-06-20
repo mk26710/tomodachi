@@ -12,6 +12,7 @@ import discord
 from discord.ext import commands
 
 from tomodachi.core import CogMixin, TomodachiContext
+from tomodachi.utils import i
 
 MemberUser = Union[discord.Member, discord.User]
 
@@ -54,7 +55,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
                 return m.author.id == target.id
             return True
 
-        info = await ctx.send(f"{ctx.icon['loading']} Processing...")
+        info = await ctx.send(f"{i:loading} Processing...")
         deleted = await ctx.channel.purge(limit=amount, check=check, before=info.created_at)
 
         await info.edit(content=f":ok_hand: Deleted `{len(deleted)}` messages")

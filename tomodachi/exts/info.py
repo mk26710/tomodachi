@@ -14,12 +14,7 @@ from aiohttp import ClientResponseError
 from discord.ext import flags, commands
 
 from tomodachi.core import CogMixin, TomodachiContext
-from tomodachi.utils import (
-    timestamp,
-    humanize_flags,
-    humanize_activity,
-    make_progress_bar,
-)
+from tomodachi.utils import timestamp, humanize_flags, humanize_activity, make_progress_bar, i
 
 
 class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=742312550821134396)):
@@ -84,20 +79,12 @@ class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=74231255
                 roles = ", ".join(reversed(tuple(r.mention for r in user.roles if "everyone" not in r.name)))
                 embed.add_field(name="Roles", value=roles, inline=False)
 
-            embed.add_field(
-                name="Join date",
-                value=f"{self.bot.icon('slowmode')} {timestamp(user.joined_at):F}",
-                inline=False,
-            )
+            embed.add_field(name="Join date", value=f"{i:slowmode} {timestamp(user.joined_at):F}", inline=False)
 
-        embed.add_field(
-            name="Creation date",
-            value=f"{self.bot.icon('slowmode')} {timestamp(user.created_at):F}",
-            inline=False,
-        )
+        embed.add_field(name="Creation date", value=f"{i:slowmode} {timestamp(user.created_at):F}", inline=False)
 
         if await self.bot.is_owner(user):
-            embed.description = f"{ctx.icon['developer']} **Bot Admin**"
+            embed.description = f"{i:developer} **Bot Admin**"
 
         await ctx.send(embed=embed)
 
@@ -107,7 +94,7 @@ class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=74231255
         guild = server or ctx.guild
 
         embed = discord.Embed(title=f"{guild.name} ({guild.id})")
-        embed.description = f"{ctx.icon['owner']} {guild.owner} (`{guild.owner_id}`)"
+        embed.description = f"{i:owner} {guild.owner} (`{guild.owner_id}`)"
         if guild.description:
             embed.description = f"{guild.description}\n\n{embed.description}"
 
@@ -117,24 +104,24 @@ class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=74231255
         features = ""
         for feature in guild.features:
             feature = str(feature).replace("_", " ").lower().title()
-            features = f"{features}\n{ctx.icon['roundedcheck']} {feature}"
+            features = f"{features}\n{i:roundedcheck} {feature}"
 
         if features:
             embed.add_field(name="Features", value=features)
 
         statuses_count = Counter(m.status.name for m in guild.members)
-        statuses = " ".join(f"{ctx.icon[s]} {c}" for s, c in statuses_count.most_common())
+        statuses = " ".join(f"{i(s)} {c}" for s, c in statuses_count.most_common())
         if statuses:
             embed.add_field(name="Members", value=statuses)
 
         specials_count = Counter(f.name for m in guild.members for f in m.public_flags.all())
-        flagged_members = " ".join(f"{ctx.icon[f]} {c}" for f, c in specials_count.most_common())
+        flagged_members = " ".join(f"{i(f)} {c}" for f, c in specials_count.most_common())
         if flagged_members:
             embed.add_field(name="Flags Stats", value=flagged_members, inline=False)
 
         embed.add_field(
             name="Server creation date",
-            value=f"{ctx.icon['slowmode']} {timestamp(guild.created_at):F}",
+            value=f"{i:slowmode} {timestamp(guild.created_at):F}",
             inline=False,
         )
 
@@ -164,7 +151,7 @@ class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=74231255
         progression = f"{elapsed} `{bar}` {duration}"
 
         e = discord.Embed(colour=0x1ED760)
-        e.set_author(name=f"{ctx.author.name}", icon_url=self.bot.icon("spotify").url)
+        e.set_author(name=f"{ctx.author.name}", icon_url=i("spotify").url)
         e.add_field(name="Title", value=f"[{activity.title}]({track_url})")
         e.add_field(name="Artists", value=", ".join(activity.artists))
         e.add_field(name="Album", value=f"{activity.album}")

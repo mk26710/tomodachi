@@ -16,8 +16,7 @@ import discord
 from discord.ext import commands
 
 import config
-from tomodachi.utils import AniList, make_intents
-from tomodachi.core.icons import Icons
+from tomodachi.utils import AniList, i, make_intents
 from tomodachi.core.context import TomodachiContext
 from tomodachi.utils.database import db
 from tomodachi.core.exceptions import AlreadyBlacklisted
@@ -51,8 +50,6 @@ class Tomodachi(commands.AutoShardedBot):
         # list with user ids
         self.blacklist = []
 
-        # Alias to Icons singleton
-        self.icon = Icons()
         # Faster access to support guild data
         self.support_guild: Optional[discord.Guild] = None
         self.traceback_log: Optional[discord.TextChannel] = None
@@ -152,7 +149,7 @@ class Tomodachi(commands.AutoShardedBot):
         support_channels = await support_guild.fetch_channels()
         self.traceback_log = discord.utils.get(support_channels, name="traceback")
 
-        await self.icon.setup(support_guild.emojis)
+        await i.setup(support_guild.emojis)
         await AniList.setup(self.session)
 
         for ext in config.EXTENSIONS:
