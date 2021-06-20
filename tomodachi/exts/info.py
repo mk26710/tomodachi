@@ -9,14 +9,17 @@ from typing import Union
 from datetime import datetime
 from collections import Counter
 
-import arrow
 import discord
-import humanize
 from aiohttp import ClientResponseError
 from discord.ext import flags, commands
 
 from tomodachi.core import CogMixin, TomodachiContext
-from tomodachi.utils import humanize_flags, humanize_activity, make_progress_bar
+from tomodachi.utils import (
+    timestamp,
+    humanize_flags,
+    humanize_activity,
+    make_progress_bar,
+)
 
 
 class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=742312550821134396)):
@@ -81,13 +84,17 @@ class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=74231255
                 roles = ", ".join(reversed(tuple(r.mention for r in user.roles if "everyone" not in r.name)))
                 embed.add_field(name="Roles", value=roles, inline=False)
 
-            joined_at = arrow.get(user.joined_at)
-            joined = "%s (`%s`)" % (humanize.naturaltime(arrow.utcnow() - joined_at), joined_at)
-            embed.add_field(name="Join date", value=f"{self.bot.icon('slowmode')} {joined}", inline=False)
+            embed.add_field(
+                name="Join date",
+                value=f"{self.bot.icon('slowmode')} {timestamp(user.joined_at):F}",
+                inline=False,
+            )
 
-        created_at = arrow.get(user.created_at)
-        created = "%s (`%s`)" % (humanize.naturaltime(arrow.utcnow() - created_at), created_at)
-        embed.add_field(name="Creation date", value=f"{self.bot.icon('slowmode')} {created}", inline=False)
+        embed.add_field(
+            name="Creation date",
+            value=f"{self.bot.icon('slowmode')} {timestamp(user.created_at):F}",
+            inline=False,
+        )
 
         if await self.bot.is_owner(user):
             embed.description = f"{ctx.icon['developer']} **Bot Admin**"
@@ -125,9 +132,11 @@ class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=74231255
         if flagged_members:
             embed.add_field(name="Flags Stats", value=flagged_members, inline=False)
 
-        created_at = arrow.get(guild.created_at)
-        created = "%s (`%s`)" % (humanize.naturaltime(arrow.utcnow() - created_at), created_at)
-        embed.add_field(name="Server creation date", value=f"{ctx.icon['slowmode']} {created}", inline=False)
+        embed.add_field(
+            name="Server creation date",
+            value=f"{ctx.icon['slowmode']} {timestamp(guild.created_at):F}",
+            inline=False,
+        )
 
         await ctx.send(embed=embed)
 
