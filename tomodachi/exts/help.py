@@ -13,6 +13,7 @@ import discord
 from discord.ext import commands
 
 from tomodachi.core import CogMixin, TomodachiContext
+from tomodachi.utils.icons import i
 
 # Type alias for a commands mapping, quite helpful
 Commands = List[Union[commands.Command, commands.Group]]
@@ -108,7 +109,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
 
         description = ""
         if command.help:
-            description += f"{self.context.bot.icon('rich_presence')} {command.help}"
+            description += f"{i:rich_presence} {command.help}"
 
         if command.description:
             description += f"\n\n{command.description}"
@@ -117,7 +118,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
             embed.description = description
 
         if cooldown := command._buckets._cooldown:  # noqa
-            embed.add_field(name="Cooldown", value=f"{self.context.bot.icon('slowmode')} {int(cooldown.per)} seconds")
+            embed.add_field(name="Cooldown", value=f"{i:slowmode} {int(cooldown.per)} seconds")
 
         if command.aliases:
             aliases = (f"`{alias}`" for alias in command.aliases)
@@ -127,7 +128,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
 
     async def send_error_message(self, error):
         embed = discord.Embed(colour=self._e_colour)
-        embed.title = f"{self.context.bot.icon('question')} {error}"
+        embed.title = f"{i:question} {error}"
 
         await self.get_destination().send(embed=embed)
 
