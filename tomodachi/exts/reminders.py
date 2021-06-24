@@ -6,17 +6,14 @@
 #
 #  Heavily inspired by https://github.com/Rapptz/RoboDanny <
 
-import asyncio
-from typing import Optional
-from datetime import datetime
-
-import attr
 import discord
 from discord.ext import commands
 from more_itertools import chunked
 
 from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils import helpers
+from tomodachi.core.enums import ActionType
+from tomodachi.core.actions import Action
 from tomodachi.utils.timestamp import timestamp
 from tomodachi.utils.converters import EntryID, TimeUnit
 
@@ -24,7 +21,7 @@ from tomodachi.utils.converters import EntryID, TimeUnit
 def reminders_limit():
     async def predicate(ctx: TomodachiContext):
         async with ctx.bot.pool.acquire() as conn:
-            query = "SELECT count(id) FROM reminders WHERE author_id = $1;"
+            query = "SELECT count(id) FROM actions WHERE author_id = $1 AND sort = 'REMINDER';"
             stmt = await conn.prepare(query)
             count = await stmt.fetchval(ctx.author.id)
 
@@ -36,122 +33,30 @@ def reminders_limit():
     return commands.check(predicate)
 
 
-@attr.s(slots=True)
-class Reminder:
-    # Required attrs that needs to be passed in the constructor
-    trigger_at = attr.ib(type=datetime)
-    author_id = attr.ib(type=int)
-    channel_id = attr.ib(type=int)
-    message_id = attr.ib(type=int)
-
-    # Attrs with default values
-    id = attr.ib(type=int, default=None)
-    guild_id = attr.ib(type=int, default=None)
-    contents = attr.ib(type=str, default="...", repr=False)
-    created_at = attr.ib(type=datetime, default=attr.Factory(helpers.utcnow))
-
-
 class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
-    def __init__(self, /, tomodachi):
-        super().__init__(tomodachi)
-        self.cond = asyncio.Condition()
-        self.task = asyncio.create_task(self.dispatcher())
-        self.active: Optional[Reminder] = None
-
-    def cog_unload(self):
-        self.task.cancel()
-
-    async def dispatcher(self):
-        async with self.cond:
-            reminder = self.active = await self.get_reminder()
-
-            if not reminder:
-                await self.cond.wait()
-                await self.reschedule()
-
-            now = helpers.utcnow()
-            if reminder.trigger_at >= now:
-                delta = (reminder.trigger_at - now).total_seconds()
-                await asyncio.sleep(delta)
-
-            await self.trigger_reminder(reminder)
-            await self.reschedule()
-
-    async def reschedule(self):
-        if not self.task.cancelled() or self.task.done():
-            self.task.cancel()
-
-        self.task = asyncio.create_task(self.dispatcher())
-
-        async with self.cond:
-            self.cond.notify_all()
-
-    async def get_reminder(self):
-        async with self.bot.pool.acquire() as conn:
-            query = """SELECT * 
-                FROM reminders 
-                WHERE (CURRENT_TIMESTAMP + '28 days'::interval) > reminders.trigger_at
-                ORDER BY reminders.trigger_at 
-                LIMIT 1;"""
-            stmt = await conn.prepare(query)
-            record = await stmt.fetchrow()
-
-        if not record:
-            return None
-
-        return Reminder(**record)
-
-    async def trigger_reminder(self, reminder: Reminder):
-        await self.bot.pool.execute("DELETE FROM reminders WHERE id = $1;", reminder.id)
-        self.bot.dispatch("triggered_reminder", reminder=reminder)
-
-    async def trigger_short_reminder(self, seconds, reminder: Reminder):
-        await asyncio.sleep(seconds)
-        self.bot.dispatch("triggered_reminder", reminder=reminder)
-
-    async def create_reminder(self, r: Reminder):
-        now = helpers.utcnow()
-        delta = (r.trigger_at - now).total_seconds()
-
-        if delta <= 60:
-            asyncio.create_task(self.trigger_short_reminder(delta, r))
-            return r
-
-        async with self.bot.db.pool.acquire() as conn:
-            query = """INSERT INTO reminders (author_id, trigger_at, guild_id, channel_id, message_id, contents)
-                VALUES ($1, $2, $3, $4, $5, $6)
-                RETURNING *;"""
-            stmt = await conn.prepare(query)
-            record = await stmt.fetchrow(r.author_id, r.trigger_at, r.guild_id, r.channel_id, r.message_id, r.contents)
-
-        r = Reminder(**record)
-        # Once the new reminder created dispatcher has to be restarted
-        # but only if the currently active reminder happens later than new
-        if (self.active and self.active.trigger_at >= r.trigger_at) or self.active is None:
-            asyncio.create_task(self.reschedule())
-
-        return r
-
     @commands.Cog.listener()
-    async def on_triggered_reminder(self, reminder: Reminder):
+    async def on_triggered_action(self, action: Action):
         await self.bot.wait_until_ready()
 
+        if action.sort is not ActionType.REMINDER:
+            return
+
         try:
-            channel = self.bot.get_channel(reminder.id) or await self.bot.fetch_channel(reminder.channel_id)
+            channel = self.bot.get_channel(action.id) or await self.bot.fetch_channel(action.channel_id)
         except (discord.NotFound, discord.Forbidden, discord.HTTPException):
             channel = None
 
         try:
-            author = self.bot.get_user(reminder.author_id) or await self.bot.fetch_user(reminder.author_id)
+            author = self.bot.get_user(action.author_id) or await self.bot.fetch_user(action.author_id)
         except discord.NotFound:
             return
 
-        when = timestamp(reminder.created_at)
-        jump_url = "https://discord.com/channels/{0.guild_id}/{0.channel_id}/{0.message_id}".format(reminder)
+        when = timestamp(action.created_at)
+        jump_url = "https://discord.com/channels/{0.guild_id}/{0.channel_id}/{0.message_id}".format(action)
 
         embed = discord.Embed()
-        embed.title = f"Reminder #{reminder.id}" if reminder.id is not None else "Short Reminder"
-        embed.description = f"You asked me on {when:F} [here]({jump_url}) to remind you:\n{reminder.contents}"
+        embed.title = f"Reminder #{action.id}" if action.id is not None else "Short Reminder"
+        embed.description = f"You asked me on {when:F} [here]({jump_url}) to remind you:\n{action.extra['content']}"
         embed.set_footer(text=f"Reminder for {author}", icon_url=helpers.avatar_or_default(author).url)
 
         try:
@@ -170,49 +75,44 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
         if not ctx.invoked_subcommand:
             await ctx.send(":x: You haven't used any subcommand, please, see help.")
 
-    @commands.is_owner()
-    @reminder.command(name="active")
-    async def reminder_get_active(self, ctx: TomodachiContext):
-        await ctx.send(f"Current active reminder: {self.active}")
-
     @reminders_limit()
     @reminder.command(name="add", aliases=["new", "a"], help="Create new reminder")
     async def reminder_add(self, ctx: TomodachiContext, to_wait: TimeUnit, *, text: str = "..."):
         now = helpers.utcnow()
         trigger_at = now + to_wait
 
-        reminder = Reminder(
-            created_at=now,
+        action = Action(
+            sort=ActionType.REMINDER,
             trigger_at=trigger_at,
             author_id=ctx.author.id,
             guild_id=ctx.guild.id,
             channel_id=ctx.channel.id,
             message_id=ctx.message.id,
-            contents=text,
+            extra={"content": text},
         )
 
-        reminder = await self.create_reminder(reminder)
-        when = timestamp(reminder.trigger_at)
+        action = await self.bot.actions.create_action(action)
+        when = timestamp(action.trigger_at)
 
         identifier = ""
-        if reminder.id:
-            identifier = f" (#{reminder.id})"
+        if action.id:
+            identifier = f" (#{action.id})"
 
-        await ctx.send(f":ok_hand: I will remind you about this on {when:F}" + identifier)
+        await ctx.send(f":ok_hand: I will remind you about this at {when:F}" + identifier)
 
     @reminder.command(name="list", aliases=["ls"])
     async def reminder_list(self, ctx: TomodachiContext):
         async with self.bot.db.pool.acquire() as conn:
-            query = "SELECT * FROM reminders WHERE author_id = $1 LIMIT 500;"
+            query = "SELECT * FROM actions WHERE author_id=$1 AND sort='REMINDER' LIMIT 500;"
             stmt = await conn.prepare(query)
             rows = await stmt.fetch(ctx.author.id)
 
-        reminders = tuple(Reminder(**row) for row in rows)
-        if not reminders:
+        actions = tuple(Action(**row) for row in rows)
+        if not actions:
             return await ctx.send(":x: You don't have any reminders!")
 
         lines = []
-        for reminder in reminders:
+        for reminder in actions:
             when = timestamp(reminder.trigger_at)
             line = f"**(#{reminder.id})** on {when:F}"
             lines.append(line)
@@ -227,18 +127,18 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
     @reminder.command(name="info", aliases=["check", "view"], help="Shows content of the specified reminder")
     async def reminder_info(self, ctx: TomodachiContext, reminder_id: EntryID):
         async with self.bot.db.pool.acquire() as conn:
-            query = "SELECT * FROM reminders WHERE author_id = $1 AND id = $2 LIMIT 1;"
+            query = "SELECT * FROM actions WHERE author_id=$1 AND id=$2 AND sort='REMINDER' LIMIT 1;"
             row = await conn.fetchrow(query, ctx.author.id, reminder_id)
 
         if not row:
             return await ctx.send(f":x: You don't have reminder with ID `#{reminder_id}`.")
 
-        reminder = Reminder(**row)
+        action = Action(**row)
 
         embed = discord.Embed()
-        embed.title = f"Reminder #{reminder.id}"
-        embed.description = f"{reminder.contents[0:2000]}"
-        embed.timestamp = reminder.trigger_at
+        embed.title = f"Reminder #{action.id}"
+        embed.description = f"{action.extra['content'][0:2000]}"
+        embed.timestamp = action.trigger_at
         embed.set_footer(text=f"{ctx.author}", icon_url=helpers.avatar_or_default(ctx.author).url)
 
         await ctx.send(embed=embed, delete_after=120)
@@ -246,19 +146,19 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
     @reminder.command(name="remove", aliases=["rmv", "delete", "del"], help="Remove some reminder from your list")
     async def reminder_remove(self, ctx: TomodachiContext, reminder_id: EntryID):
         async with self.bot.db.pool.acquire() as conn:
-            query = "DELETE FROM reminders WHERE author_id = $1 AND id = $2 RETURNING true;"
+            query = "DELETE FROM actions WHERE author_id=$1 AND id=$2 AND sort='REMINDER' RETURNING true;"
             value = await conn.fetchval(query, ctx.author.id, reminder_id)
 
         if not value:
             return await ctx.send(f":x: Nothing happened. Most likely you don't have a reminder `#{reminder_id}`.")
 
-        await self.reschedule()
+        await self.bot.actions.reschedule()
         await ctx.send(f":ok_hand: Successfully deleted `#{reminder_id}` reminder.")
 
     @reminder.command(name="purge", aliases=["clear"])
     async def reminder_purge(self, ctx: TomodachiContext):
         async with self.bot.db.pool.acquire() as conn:
-            query = """WITH deleted AS (DELETE FROM reminders WHERE author_id = $1 RETURNING *) 
+            query = """WITH deleted AS (DELETE FROM actions WHERE author_id=$1 AND sort='REMINDER' RETURNING *) 
                 SELECT count(*) 
                 FROM deleted;"""
             stmt = await conn.prepare(query)
@@ -267,7 +167,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
         if not count:
             return await ctx.send(":x: Nothing happened. Looks like you have no reminders.")
 
-        await self.reschedule()
+        await self.bot.actions.reschedule()
         await ctx.send(f":ok_hand: Deleted `{count}` reminder(s) from your list.")
 
 
