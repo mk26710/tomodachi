@@ -1,3 +1,30 @@
+-- actions table
+create table actions
+(
+    id bigserial,
+    sort text default 'REMINDER' not null,
+    created_at timestamp with time zone default CURRENT_TIMESTAMP not null,
+    trigger_at timestamp with time zone default CURRENT_TIMESTAMP not null,
+    author_id bigint not null,
+    guild_id bigint default NULL,
+    channel_id bigint not null,
+    message_id bigint not null,
+    extra jsonb default NULL
+);
+
+create unique index actions_id_uindex
+    on actions (id);
+
+create index actions_created_at_index
+    on actions (created_at);
+
+create index actions_trigger_at_index
+    on actions (trigger_at);
+
+alter table actions
+    add constraint actions_pk
+        primary key (id);
+
 -- reminders table
 create table reminders
 (
