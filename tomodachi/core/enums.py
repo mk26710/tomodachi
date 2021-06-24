@@ -10,6 +10,6 @@ __all__ = ["ActionType"]
 
 
 class ActionType(Enum):
+    TEMPBAN = "TEMPBAN"
     REMINDER = "REMINDER"
-    MODERATION = "MODERATION"
     NOTIFICATION = "NOTIFICATION"
