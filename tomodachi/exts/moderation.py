@@ -5,6 +5,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+from tomodachi.utils.converters import TimeUnit
 
 from typing import Union, Optional
 
@@ -26,7 +27,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.command(aliases=["permaban"], help="Permanently bans a user from the server")
-    async def ban(self, ctx: TomodachiContext, target: Union[MemberUser], *, reason: str = None):
+    async def ban(self, ctx: TomodachiContext, target: MemberUser, *, reason: str = None):
         reason = reason or "No reason provided."
 
         await ctx.guild.ban(target, reason=f"{ctx.author} ({ctx.author.id}): {reason}")
@@ -46,7 +47,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
     @commands.bot_has_guild_permissions(manage_messages=True)
     @commands.command(aliases=["purge", "prune"], help="Deletes specified amount of messages", description="Messages of a specified user will be deleted if target was provided")  # noqa
     # fmt: on
-    async def clear(self, ctx: TomodachiContext, target: Optional[Union[MemberUser]] = None, amount: int = 50):
+    async def clear(self, ctx: TomodachiContext, target: Optional[MemberUser] = None, amount: int = 50):
         if amount > 1000:
             return await ctx.send(f":x: You can bulk delete only up to `1000` messages!")
 
