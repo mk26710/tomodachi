@@ -17,6 +17,7 @@ from discord.ext import commands
 
 import config
 from tomodachi.utils import AniList, i, make_intents
+from tomodachi.core.actions import Actions
 from tomodachi.core.context import TomodachiContext
 from tomodachi.utils.database import db
 from tomodachi.core.exceptions import AlreadyBlacklisted
@@ -45,6 +46,7 @@ class Tomodachi(commands.AutoShardedBot):
         # Database shortcuts
         self.db = db
         self.pool = db.pool
+        self.actions = Actions(self)
 
         self.prefixes = {}
         # list with user ids
@@ -64,6 +66,8 @@ class Tomodachi(commands.AutoShardedBot):
         self.loop.create_task(self.fetch_prefixes())
 
     async def close(self):
+        self.actions.task.cancel()
+
         if not self.session.closed:
             await self.session.close()
 
