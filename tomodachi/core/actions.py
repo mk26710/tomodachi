@@ -110,7 +110,7 @@ class Actions:
         now = helpers.utcnow()
         delta = (a.trigger_at - now).total_seconds()
 
-        if delta <= 60:
+        if delta <= 60 and a.action_type is not ActionType.INFRACTION:
             asyncio.create_task(self.trigger_short_action(delta, a))
             return a
 
