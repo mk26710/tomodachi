@@ -21,7 +21,7 @@ from tomodachi.utils.converters import EntryID, TimeUnit
 def reminders_limit():
     async def predicate(ctx: TomodachiContext):
         async with ctx.bot.pool.acquire() as conn:
-            query = "SELECT count(id) FROM actions WHERE author_id = $1 AND sort = 'REMINDER';"
+            query = "SELECT count(id) FROM actions WHERE author_id = $1 AND action_type = 'REMINDER';"
             stmt = await conn.prepare(query)
             count = await stmt.fetchval(ctx.author.id)
 
@@ -38,7 +38,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
     async def on_triggered_action(self, action: Action):
         await self.bot.wait_until_ready()
 
-        if action.sort is not ActionType.REMINDER:
+        if action.action_type is not ActionType.REMINDER:
             return
 
         try:
@@ -82,7 +82,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
         trigger_at = now + to_wait
 
         action = Action(
-            sort=ActionType.REMINDER,
+            action_type=ActionType.REMINDER,
             trigger_at=trigger_at,
             author_id=ctx.author.id,
             guild_id=ctx.guild.id,
@@ -103,7 +103,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
     @reminder.command(name="list", aliases=["ls"])
     async def reminder_list(self, ctx: TomodachiContext):
         async with self.bot.db.pool.acquire() as conn:
-            query = "SELECT * FROM actions WHERE author_id=$1 AND sort='REMINDER' LIMIT 500;"
+            query = "SELECT * FROM actions WHERE author_id=$1 AND action_type='REMINDER' LIMIT 500;"
             stmt = await conn.prepare(query)
             rows = await stmt.fetch(ctx.author.id)
 
@@ -127,7 +127,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
     @reminder.command(name="info", aliases=["check", "view"], help="Shows content of the specified reminder")
     async def reminder_info(self, ctx: TomodachiContext, reminder_id: EntryID):
         async with self.bot.db.pool.acquire() as conn:
-            query = "SELECT * FROM actions WHERE author_id=$1 AND id=$2 AND sort='REMINDER' LIMIT 1;"
+            query = "SELECT * FROM actions WHERE author_id=$1 AND id=$2 AND action_type='REMINDER' LIMIT 1;"
             row = await conn.fetchrow(query, ctx.author.id, reminder_id)
 
         if not row:
@@ -146,7 +146,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
     @reminder.command(name="remove", aliases=["rmv", "delete", "del"], help="Remove some reminder from your list")
     async def reminder_remove(self, ctx: TomodachiContext, reminder_id: EntryID):
         async with self.bot.db.pool.acquire() as conn:
-            query = "DELETE FROM actions WHERE author_id=$1 AND id=$2 AND sort='REMINDER' RETURNING true;"
+            query = "DELETE FROM actions WHERE author_id=$1 AND id=$2 AND action_type='REMINDER' RETURNING true;"
             value = await conn.fetchval(query, ctx.author.id, reminder_id)
 
         if not value:
@@ -158,7 +158,7 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
     @reminder.command(name="purge", aliases=["clear"])
     async def reminder_purge(self, ctx: TomodachiContext):
         async with self.bot.db.pool.acquire() as conn:
-            query = """WITH deleted AS (DELETE FROM actions WHERE author_id=$1 AND sort='REMINDER' RETURNING *) 
+            query = """WITH deleted AS (DELETE FROM actions WHERE author_id=$1 AND action_type='REMINDER' RETURNING *) 
                 SELECT count(*) 
                 FROM deleted;"""
             stmt = await conn.prepare(query)
