@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, Optional, TypedDict, Union
+from typing import TYPE_CHECKING, Any, Union, Optional, TypedDict, final
 from datetime import datetime
 
 import attr
@@ -33,7 +33,7 @@ class InfractionExtras(TypedDict):
     reason: str
 
 
-def convert_sort(val: Any) -> ActionType:
+def convert_action_type(val: Any) -> ActionType:
     if isinstance(val, ActionType):
         return val
     return ActionType(val)
@@ -45,28 +45,20 @@ def convert_extra(val: Any) -> dict:
     return ujson.loads(val)
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, auto_attribs=True)
 class Action:
-    author_id = attr.ib(type=int)
-    channel_id = attr.ib(type=int)
-    message_id = attr.ib(type=int)
-
-    id = attr.ib(type=Optional[int], default=None)
-    sort = attr.ib(type=ActionType, converter=convert_sort, default=ActionType.REMINDER)
-    created_at = attr.ib(type=datetime, factory=helpers.utcnow)
-    trigger_at = attr.ib(type=datetime, factory=helpers.utcnow)
-    guild_id = attr.ib(type=Optional[int], default=int)
-    extra = attr.ib(type=Union[ReminderExtras, InfractionExtras], converter=convert_extra, default=None)
-
-    @property
-    def raw_sort(self):
-        return self.sort.name
-
-    @property
-    def raw_extra(self):
-        return ujson.dumps(self.extra)
+    id: Optional[int] = None
+    action_type: Optional[ActionType] = attr.ib(converter=convert_action_type, default=ActionType.REMINDER)
+    created_at: Optional[datetime] = attr.ib(factory=helpers.utcnow)
+    trigger_at: Optional[datetime] = attr.ib(factory=helpers.utcnow)
+    author_id: Optional[int] = None
+    guild_id: Optional[int] = None
+    channel_id: Optional[int] = None
+    message_id: Optional[int] = None
+    extra: Optional[Union[ReminderExtras, InfractionExtras]] = attr.ib(converter=convert_extra, default=None)
 
 
+@final
 class Actions:
     def __init__(self, bot: Tomodachi):
         self.bot = bot
@@ -125,12 +117,12 @@ class Actions:
         async with self.bot.db.pool.acquire() as conn:
             await conn.set_type_codec("jsonb", encoder=ujson.dumps, decoder=ujson.loads, schema="pg_catalog")
 
-            query = """INSERT INTO actions (sort, trigger_at, author_id, guild_id, channel_id, message_id, extra)
+            query = """INSERT INTO actions (action_type, trigger_at, author_id, guild_id, channel_id, message_id, extra)
                 VALUES ($1, $2, $3, $4, $5, $6, $7) 
                 RETURNING *;"""
             stmt = await conn.prepare(query)
             record = await stmt.fetchrow(
-                a.sort.name,
+                a.action_type.name,
                 a.trigger_at,
                 a.author_id,
                 a.guild_id,
