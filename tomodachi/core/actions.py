@@ -140,8 +140,14 @@ class Actions:
         return a
 
     async def trigger_action(self, action: Action):
+        if action.action_type is ActionType.INFRACTION:
+            infraction = await self.bot.infractions.get_by_action(action.id)
+            self.bot.dispatch("expired_infraction", infraction=infraction)
+
+        else:
+            self.bot.dispatch("triggered_action", action=action)
+
         await self.bot.pool.execute("DELETE FROM actions WHERE id = $1;", action.id)
-        self.bot.dispatch("triggered_action", action=action)
 
     async def trigger_short_action(self, seconds, action: Action):
         await asyncio.sleep(seconds)
