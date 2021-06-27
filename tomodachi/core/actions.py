@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, TypedDict, Union
 from datetime import datetime
 
 import attr
@@ -22,6 +22,15 @@ if TYPE_CHECKING:
     from tomodachi.core.bot import Tomodachi
 
 __all__ = ["Action", "Actions"]
+
+
+class ReminderExtras(TypedDict):
+    content: str
+
+
+class InfractionExtras(TypedDict):
+    target_id: int
+    reason: str
 
 
 def convert_sort(val: Any) -> ActionType:
@@ -47,7 +56,7 @@ class Action:
     created_at = attr.ib(type=datetime, factory=helpers.utcnow)
     trigger_at = attr.ib(type=datetime, factory=helpers.utcnow)
     guild_id = attr.ib(type=Optional[int], default=int)
-    extra = attr.ib(type=dict, converter=convert_extra, default=None)
+    extra = attr.ib(type=Union[ReminderExtras, InfractionExtras], converter=convert_extra, default=None)
 
     @property
     def raw_sort(self):
