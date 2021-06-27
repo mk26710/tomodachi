@@ -6,10 +6,20 @@
 
 from enum import Enum
 
-__all__ = ["ActionType"]
+__all__ = ["ActionType", "InfractionType"]
+
+
+class InfractionType(Enum):
+    WARN = "WARN"
+    MUTE = "MUTE"
+    KICK = "KICK"
+    UNBAN = "UNBAN"
+    TEMPBAN = "TEMPBAN"
+    PERMABAN = "PERMABAN"
 
 
 class ActionType(Enum):
-    TEMPBAN = "TEMPBAN"
     REMINDER = "REMINDER"
+    INFRACTION = "INFRACTION"
+    TEMPBAN = "TEMPBAN"  # deprecated
     NOTIFICATION = "NOTIFICATION"
