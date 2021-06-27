@@ -5,18 +5,17 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-from datetime import datetime, timedelta
-from tomodachi.core.infractions import Infraction
 
 from typing import Union, Optional
+from datetime import datetime
 
 import discord
 from discord.ext import commands
 
 from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils import i, helpers, timestamp
-from tomodachi.core.enums import ActionType, InfractionType
-from tomodachi.core.actions import Action
+from tomodachi.core.enums import InfractionType
+from tomodachi.core.infractions import Infraction
 from tomodachi.utils.converters import TimeUnit
 
 MemberUser = Union[discord.Member, discord.User]
@@ -38,16 +37,19 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         return reason if len(reason) <= 512 else f"{reason[0:509]}..."
 
     @commands.Cog.listener()
-    async def on_triggered_action(self, action: Action):
+    async def on_expired_infraction(self, infraction: Infraction):
         await self.bot.wait_until_ready()
 
-        if action.action_type is not ActionType.INFRACTION:
+        try:
+            guild = self.bot.get_guild(infraction.guild_id) or await self.bot.fetch_guild(infraction.guild_id)
+        except (discord.Forbidden, discord.HTTPException):
             return
 
-        guild = self.bot.get_guild(action.guild_id) or await self.bot.fetch_guild(action.guild_id)
-        target = self.bot.get_user(action.extra["target_id"]) or await self.bot.fetch_user(action.extra["target_id"])
-
-        await guild.unban(target, reason=f"Ban #{action.id} expired.")
+        try:
+            obj = discord.Object(id=infraction.target_id)
+            await guild.unban(user=obj, reason=f"Infraction #{infraction.inf_id} has expired.")
+        except (discord.Forbidden, discord.HTTPException):
+            return  # todo: once modlogs are created, log this to inform mods about failure
 
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
@@ -104,7 +106,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
 
     @commands.has_guild_permissions(kick_members=True)
     @commands.bot_has_guild_permissions(kick_members=True)
-    @commands.command(help="Kicks a member from the server")
+    @commands.command(help="Kicks a member from the server", enabled=False)
     async def kick(self, ctx: TomodachiContext, target: discord.Member, *, reason: str = None):
         raise NotImplemented() from None
 
