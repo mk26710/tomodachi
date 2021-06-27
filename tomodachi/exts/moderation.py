@@ -5,6 +5,8 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+from datetime import datetime, timedelta
+from tomodachi.core.infractions import Infraction
 
 from typing import Union, Optional
 
@@ -13,7 +15,7 @@ from discord.ext import commands
 
 from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils import i, helpers, timestamp
-from tomodachi.core.enums import ActionType
+from tomodachi.core.enums import ActionType, InfractionType
 from tomodachi.core.actions import Action
 from tomodachi.utils.converters import TimeUnit
 
@@ -26,11 +28,20 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
             raise commands.NoPrivateMessage()
         return True
 
+    @staticmethod
+    def make_audit_reason(mod: str, _reason: str, *, until: datetime = None) -> str:
+        reason = f"[{mod}] "
+        if until:
+            reason += f"[Expiring {until}] "
+        reason += _reason
+
+        return reason if len(reason) <= 512 else f"{reason[0:509]}..."
+
     @commands.Cog.listener()
     async def on_triggered_action(self, action: Action):
         await self.bot.wait_until_ready()
 
-        if action.sort is not ActionType.TEMPBAN:
+        if action.action_type is not ActionType.INFRACTION:
             return
 
         guild = self.bot.get_guild(action.guild_id) or await self.bot.fetch_guild(action.guild_id)
@@ -41,43 +52,61 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.command(aliases=["permaban"], help="Permanently bans a user from the server")
-    async def ban(self, ctx: TomodachiContext, target: MemberUser, *, reason: str = "No reason."):
-        await ctx.guild.ban(target, reason=f"{ctx.author} ({ctx.author.id}): {reason}")
-        await ctx.send(f":ok_hand: **{target}** (`{target.id}`) was banned for: `{reason}`")
+    async def ban(self, ctx: TomodachiContext, target: MemberUser, *, reason: str = None):
+        reason = reason or "No reason."
+
+        try:
+            await ctx.guild.ban(target, reason=self.make_audit_reason(f"{ctx.author} ({ctx.author.id})", reason))
+        except (discord.Forbidden, discord.HTTPException):
+            raise
+
+        inf = Infraction(
+            inf_type=InfractionType.PERMABAN,
+            expires_at=None,
+            guild_id=ctx.guild.id,
+            mod_id=ctx.author.id,
+            target_id=target.id,
+            reason=reason,
+        )
+
+        inf = await self.bot.infractions.create(inf, permanent=True)
+        content = f":ok_hand: **{target}** (`{target.id}`) was banned for: `{reason}` (`#{inf.inf_id}`)"
+
+        await ctx.send(content)
 
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.command(help="Bans a user for specified period time")
-    async def tempban(
-        self, ctx: TomodachiContext, target: MemberUser, duration: TimeUnit, *, reason: str = "No reason."
-    ):
+    async def tempban(self, ctx: TomodachiContext, target: MemberUser, duration: TimeUnit, *, reason: str = None):
+        reason = reason or "No reason."
+
         unban_at = helpers.utcnow() + duration
         when = timestamp(unban_at)
 
-        action = Action(
-            sort=ActionType.TEMPBAN,
-            trigger_at=unban_at,
-            author_id=ctx.author.id,
-            guild_id=ctx.guild.id,
-            channel_id=ctx.channel.id,
-            message_id=ctx.message.id,
-            extra={"target_id": target.id, "reason": reason},
-        )
-        await self.bot.actions.create_action(action)
+        try:
+            audit_reason = self.make_audit_reason(f"{ctx.author} ({ctx.author.id})", reason, until=unban_at)
+            await ctx.guild.ban(target, reason=audit_reason)
+        except (discord.Forbidden, discord.HTTPException):
+            raise
 
-        await ctx.guild.ban(target, reason=f"[Until {unban_at}] {ctx.author} ({ctx.author.id}): {reason}")
-        await ctx.send(
-            f":ok_hand: **{target}** (`{target.id}`) was temporarily banned until **{when:F}** for: {reason}"
+        inf = Infraction(
+            inf_type=InfractionType.TEMPBAN,
+            expires_at=unban_at,
+            guild_id=ctx.guild.id,
+            mod_id=ctx.author.id,
+            target_id=target.id,
+            reason=reason,
         )
+        inf = await self.bot.infractions.create(inf)
+        content = f":ok_hand: **{target}** (`{target.id}`) was temp-banned until **{when:F}** for: `{reason}` (`#{inf.inf_id}`)"
+
+        await ctx.send(content)
 
     @commands.has_guild_permissions(kick_members=True)
     @commands.bot_has_guild_permissions(kick_members=True)
     @commands.command(help="Kicks a member from the server")
     async def kick(self, ctx: TomodachiContext, target: discord.Member, *, reason: str = None):
-        reason = reason or "No reason provided."
-
-        await ctx.guild.kick(target, reason=f"{ctx.author} ({ctx.author.id}): {reason}")
-        await ctx.send(f":ok_hand: **{target}** (`{target.id}`) was kicked for: `{reason}`")
+        raise NotImplemented() from None
 
     # fmt: off
     @commands.has_guild_permissions(manage_messages=True)
