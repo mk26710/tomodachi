@@ -21,6 +21,7 @@ from tomodachi.core.actions import Actions
 from tomodachi.core.context import TomodachiContext
 from tomodachi.utils.database import db
 from tomodachi.core.exceptions import AlreadyBlacklisted
+from tomodachi.core.infractions import Infractions
 
 __all__ = ["Tomodachi"]
 
@@ -47,6 +48,7 @@ class Tomodachi(commands.AutoShardedBot):
         self.db = db
         self.pool = db.pool
         self.actions = Actions(self)
+        self.infractions = Infractions(self)
 
         self.prefixes = {}
         # list with user ids
