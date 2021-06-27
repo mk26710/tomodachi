@@ -11,7 +11,7 @@ from datetime import datetime
 
 import attr
 
-from tomodachi.core.enums import InfractionType, ActionType
+from tomodachi.core.enums import ActionType, InfractionType
 from tomodachi.core.actions import Action
 
 if TYPE_CHECKING:
@@ -40,6 +40,16 @@ class Infraction:
 class Infractions:
     def __init__(self, bot: Tomodachi) -> None:
         self.bot = bot
+
+    async def get_by_action(self, id: int):
+        """Get specific infraction by action ID"""
+        async with self.bot.db.pool.acquire() as conn:
+            query = "SELECT * FROM infractions WHERE action_id=$1;"
+            record = await conn.fetchrow(query, id)
+
+        if not record:
+            return None
+        return Infraction(**record)
 
     async def create(self, infraction: Infraction, *, permanent=False):
         # action_type, trigger_at, author_id, guild_id, channel_id, message_id, extra - are required fields
