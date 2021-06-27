@@ -26,7 +26,7 @@ def convert_inf_type(val: Any):
 
 @attr.s(slots=True, auto_attribs=True)
 class Infraction:
-    inf_id: Optional[int] = None
+    id: Optional[int] = None
     action_id: Optional[int] = None
     inf_type: Optional[InfractionType] = attr.ib(converter=convert_inf_type, default=InfractionType.WARN)
     created_at: Optional[datetime] = None
