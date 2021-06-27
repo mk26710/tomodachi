@@ -47,7 +47,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
 
         try:
             obj = discord.Object(id=infraction.target_id)
-            await guild.unban(user=obj, reason=f"Infraction #{infraction.inf_id} has expired.")
+            await guild.unban(user=obj, reason=f"Infraction #{infraction.id} has expired.")
         except (discord.Forbidden, discord.HTTPException):
             return  # todo: once modlogs are created, log this to inform mods about failure
 
@@ -72,7 +72,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         )
 
         inf = await self.bot.infractions.create(inf, permanent=True)
-        content = f":ok_hand: **{target}** (`{target.id}`) was banned for: `{reason}` (`#{inf.inf_id}`)"
+        content = f":ok_hand: **{target}** (`{target.id}`) was banned for: `{reason}` (`#{inf.id}`)"
 
         await ctx.send(content)
 
@@ -100,7 +100,9 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
             reason=reason,
         )
         inf = await self.bot.infractions.create(inf)
-        content = f":ok_hand: **{target}** (`{target.id}`) was temp-banned until **{when:F}** for: `{reason}` (`#{inf.inf_id}`)"
+        content = (
+            f":ok_hand: **{target}** (`{target.id}`) was temp-banned until **{when:F}** for: `{reason}` (`#{inf.id}`)"
+        )
 
         await ctx.send(content)
 
