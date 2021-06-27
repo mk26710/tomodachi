@@ -1,50 +1,3 @@
--- actions table
-create table actions
-(
-    id bigserial,
-    sort text default 'REMINDER' not null,
-    created_at timestamp with time zone default CURRENT_TIMESTAMP not null,
-    trigger_at timestamp with time zone default CURRENT_TIMESTAMP not null,
-    author_id bigint not null,
-    guild_id bigint default NULL,
-    channel_id bigint not null,
-    message_id bigint not null,
-    extra jsonb default NULL
-);
-
-create unique index actions_id_uindex
-    on actions (id);
-
-create index actions_created_at_index
-    on actions (created_at);
-
-create index actions_trigger_at_index
-    on actions (trigger_at);
-
-alter table actions
-    add constraint actions_pk
-        primary key (id);
-
--- reminders table
-create table reminders
-(
-    id bigserial,
-    created_at timestamp with time zone default CURRENT_TIMESTAMP not null,
-    trigger_at timestamp with time zone default CURRENT_TIMESTAMP not null,
-    author_id bigint not null,
-    guild_id bigint,
-    channel_id bigint not null,
-    message_id bigint not null,
-    contents text
-);
-
-create unique index reminders_id_uindex
-    on reminders (id);
-
-alter table reminders
-    add constraint reminders_pk
-        primary key (id);
-
 -- guilds table
 -- auto-generated definition
 create table guilds
@@ -124,3 +77,48 @@ begin
 end
 $$;
 
+-- actions
+create table public.actions
+(
+    id          bigint generated always as identity (start with 1000) primary key,
+    action_type text        default 'REMINDER'::text,
+    created_at  timestamptz default CURRENT_TIMESTAMP,
+    trigger_at  timestamptz default CURRENT_TIMESTAMP,
+    author_id   bigint,
+    guild_id    bigint,
+    channel_id  bigint,
+    message_id  bigint,
+    extra       jsonb
+);
+
+create index actions_trigger_at_created_at_idx
+    on public.actions (trigger_at, created_at);
+
+create index actions_author_id_guild_id_idx
+    on public.actions (author_id, guild_id);
+
+
+
+
+-- infractions
+create table if not exists public.infractions
+(
+    id         bigint generated always as identity (start with 1000) primary key,
+    action_id  bigint,
+    inf_type   text,
+    created_at timestamptz default CURRENT_TIMESTAMP,
+    expires_at timestamptz default CURRENT_TIMESTAMP,
+    guild_id   bigint,
+    mod_id     bigint,
+    target_id  bigint,
+    reason     text,
+    constraint infractions_actions_id_fk
+        foreign key (action_id) references public.actions
+            on delete set null
+);
+
+create index infractions_action_id_idx
+    on public.infractions (action_id);
+
+create index infractions_guild_id_mod_id_target_id_idx
+    on public.infractions (guild_id, mod_id, target_id);
