@@ -1,3 +1,4 @@
+create type InfractionType as enum ('WARN', 'MUTE', 'KICK', 'UNBAN', 'TEMPBAN', 'PERMABAN');
 create type ActionType as enum ('REMINDER', 'INFRACTION', 'NOTIFICATION');
 create type LoggingType as enum ('MOD_ACTIONS');
 
@@ -47,7 +48,7 @@ create table if not exists public.infractions
 (
     id         bigint generated always as identity (start with 1000) primary key,
     action_id  bigint,
-    inf_type   text,
+    inf_type   infractiontype,
     created_at timestamptz default CURRENT_TIMESTAMP,
     expires_at timestamptz default CURRENT_TIMESTAMP,
     guild_id   bigint,
