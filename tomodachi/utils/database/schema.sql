@@ -1,3 +1,4 @@
+create type ActionType as enum ('REMINDER', 'INFRACTION', 'NOTIFICATION');
 -- guilds table
 -- auto-generated definition
 create table guilds
@@ -81,14 +82,18 @@ $$;
 create table public.actions
 (
     id          bigint generated always as identity (start with 1000) primary key,
-    action_type text        default 'REMINDER'::text,
+    action_type ActionType  default 'REMINDER'::ActionType,
     created_at  timestamptz default CURRENT_TIMESTAMP,
     trigger_at  timestamptz default CURRENT_TIMESTAMP,
     author_id   bigint,
     guild_id    bigint,
     channel_id  bigint,
     message_id  bigint,
-    extra       jsonb
+    extra       jsonb,
+
+    constraint actions_fk_guild_id
+        foreign key (guild_id) references public.guilds
+            on delete cascade
 );
 
 create index actions_trigger_at_created_at_idx
