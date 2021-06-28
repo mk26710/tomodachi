@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 
 def convert_inf_type(val: Any):
+    if val is None:
+        return None
     if isinstance(val, InfractionType):
         return val
     return InfractionType(val)
@@ -28,7 +30,7 @@ def convert_inf_type(val: Any):
 class Infraction:
     id: Optional[int] = None
     action_id: Optional[int] = None
-    inf_type: Optional[InfractionType] = attr.ib(converter=convert_inf_type, default=InfractionType.WARN)
+    inf_type: Optional[InfractionType] = attr.ib(converter=convert_inf_type, default=None)
     created_at: Optional[datetime] = None
     expires_at: Optional[datetime] = None
     guild_id: Optional[int] = None
@@ -54,13 +56,10 @@ class Infractions:
     async def create(self, infraction: Infraction, *, permanent=False):
         # action_type, trigger_at, author_id, guild_id, channel_id, message_id, extra - are required fields
         # but since it's an infraction we can ignore channel and message ids because it is not a reminder
-        action_extra = {"target_id": infraction.target_id, "reason": infraction.reason}
         action = Action(
             action_type=ActionType.INFRACTION,
             trigger_at=infraction.expires_at,
-            author_id=infraction.mod_id,
             guild_id=infraction.guild_id,
-            extra=action_extra,
         )
 
         if not permanent:
@@ -69,14 +68,15 @@ class Infractions:
 
         async with self.bot.db.pool.acquire() as conn:
             query = """INSERT INTO infractions 
-            (action_id, inf_type, expires_at, guild_id, mod_id, target_id, reason) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7) 
+            (action_id, inf_type, created_at, expires_at, guild_id, mod_id, target_id, reason)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
             RETURNING *;"""
 
             record = await conn.fetchrow(
                 query,
                 action.id,
                 infraction.inf_type.name,
+                action.created_at,
                 infraction.expires_at,
                 infraction.guild_id,
                 infraction.mod_id,
