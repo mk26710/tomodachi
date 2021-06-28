@@ -39,7 +39,9 @@ def convert_action_type(val: Any) -> ActionType:
     return ActionType(val)
 
 
-def convert_extra(val: Any) -> dict:
+def convert_extra(val: Any) -> Optional[dict]:
+    if val is None:
+        return None
     if isinstance(val, dict):
         return val
     return ujson.loads(val)
