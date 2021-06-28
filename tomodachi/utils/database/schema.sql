@@ -1,4 +1,6 @@
 create type ActionType as enum ('REMINDER', 'INFRACTION', 'NOTIFICATION');
+create type LoggingType as enum ('MOD_ACTIONS');
+
 -- guilds table
 -- auto-generated definition
 create table guilds
@@ -127,3 +129,35 @@ create index infractions_action_id_idx
 
 create index infractions_guild_id_mod_id_target_id_idx
     on public.infractions (guild_id, mod_id, target_id);
+
+
+-- mod_settings
+create table if not exists public.mod_settings
+(
+    guild_id  bigint,
+    mute_role bigint,
+    mod_roles bigint[] default '{}',
+
+    unique (guild_id),
+
+    constraint mod_settings_fk_guild_id
+        foreign key (guild_id)
+            references public.guilds (guild_id)
+            on delete cascade
+);
+
+-- logging
+create table if not exists public.logging
+(
+    guild_id   bigint,
+    log_type   loggingtype,
+    channel_id bigint,
+
+    constraint logging_fk_guild_id
+        foreign key (guild_id)
+            references public.guilds (guild_id)
+            on delete cascade
+);
+
+create index logging_guild_id_idx
+    on public.logging (guild_id);
