@@ -45,7 +45,7 @@ class TomodachiDatabase(Database):
                 query = "insert into guilds(guild_id) values ($1) on conflict do nothing returning true;"
                 inserted = await conn.fetchval(query, guild_id)
                 if inserted:
-                    query = "insert into mod_settings(guild_id) values ($1);"
+                    query = "insert into mod_settings(guild_id) values ($1) on conflict do nothing;"
                     await conn.execute(query, guild_id)
 
     async def update_prefix(self, guild_id: int, new_prefix: str):
