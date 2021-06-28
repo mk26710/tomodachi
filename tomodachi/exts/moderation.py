@@ -108,9 +108,26 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
 
     @commands.has_guild_permissions(kick_members=True)
     @commands.bot_has_guild_permissions(kick_members=True)
-    @commands.command(help="Kicks a member from the server", enabled=False)
+    @commands.command(help="Kicks a member from the server")
     async def kick(self, ctx: TomodachiContext, target: discord.Member, *, reason: str = None):
-        raise NotImplemented() from None
+        reason = reason or "No reason."
+
+        try:
+            await target.kick(reason=self.make_audit_reason(f"{ctx.author} ({ctx.author.id})", reason))
+        except (discord.Forbidden, discord.HTTPException):
+            raise
+
+        inf = Infraction(
+            inf_type=InfractionType.KICK,
+            guild_id=ctx.guild.id,
+            mod_id=ctx.author.id,
+            target_id=target.id,
+            reason=reason,
+        )
+        inf = await self.bot.infractions.create(inf, permanent=True)
+        content = f":ok_hand: **{target}** (`{target.id}`) was kicked for: `{reason}` (`#{inf.id}`)"
+
+        await ctx.send(content)
 
     # fmt: off
     @commands.has_guild_permissions(manage_messages=True)
