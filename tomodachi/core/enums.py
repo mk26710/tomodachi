@@ -21,5 +21,4 @@ class InfractionType(Enum):
 class ActionType(Enum):
     REMINDER = "REMINDER"
     INFRACTION = "INFRACTION"
-    TEMPBAN = "TEMPBAN"  # deprecated
     NOTIFICATION = "NOTIFICATION"
