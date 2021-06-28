@@ -42,8 +42,11 @@ class TomodachiDatabase(Database):
     async def store_guild(self, guild_id: int):
         async with self.pool.acquire() as conn:
             async with conn.transaction():
-                query = "INSERT INTO guilds(guild_id) VALUES($1) ON CONFLICT DO NOTHING;"
-                await conn.execute(query, guild_id)
+                query = "insert into guilds(guild_id) values ($1) on conflict do nothing returning true;"
+                inserted = await conn.fetchval(query, guild_id)
+                if inserted:
+                    query = "insert into mod_settings(guild_id) values ($1);"
+                    await conn.execute(query, guild_id)
 
     async def update_prefix(self, guild_id: int, new_prefix: str):
         async with self.pool.acquire() as conn:
