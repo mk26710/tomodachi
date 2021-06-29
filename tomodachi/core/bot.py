@@ -17,6 +17,7 @@ from discord.ext import commands
 
 import config
 from tomodachi.utils import AniList, i, make_intents
+from tomodachi.core.cache import Cache
 from tomodachi.core.actions import Actions
 from tomodachi.core.context import TomodachiContext
 from tomodachi.utils.database import db
@@ -47,6 +48,7 @@ class Tomodachi(commands.AutoShardedBot):
         # Database shortcuts
         self.db = db
         self.pool = db.pool
+        self.cache = Cache(self)
         self.actions = Actions(self)
         self.infractions = Infractions(self)
 
