@@ -34,12 +34,9 @@ def is_manager():
 
 def is_mod():
     async def predicate(ctx: TomodachiContext):
-        query = "select mod_roles from mod_settings where guild_id=$1;"
+        settings = await ctx.bot.cache.get_settings(ctx.guild.id)
         author_roles = [r.id for r in ctx.author.roles]
-        mod_roles = await ctx.bot.db.pool.fetchval(query, ctx.guild.id)
-        if not mod_roles:
-            return False
 
-        return any(r_id in author_roles for r_id in mod_roles)
+        return any(r_id in author_roles for r_id in settings.mod_roles)
 
     return commands.check(predicate)
