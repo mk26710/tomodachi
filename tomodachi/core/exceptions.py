@@ -20,3 +20,11 @@ class AlreadyBlacklisted(CommandError):
 class AniListException(CommandError):
     def __init__(self, data):
         self.data = data
+
+
+class CacheFail(Exception):
+    pass
+
+
+class CacheMiss(Exception):
+    pass
