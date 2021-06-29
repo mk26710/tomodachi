@@ -19,3 +19,4 @@ class ModSettings:
     mute_role: Optional[int] = None
     mod_roles: Optional[List[int]] = []
     audit_infractions: Optional[bool] = True
+    dm_targets: Optional[bool] = False
