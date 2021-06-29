@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Union, Optional
 from discord.ext import commands
 
 from tomodachi.core.menus import TomodachiMenu
+import functools
 
 if TYPE_CHECKING:
     from discord import User, Guild, Member, Message
@@ -30,6 +31,8 @@ class TomodachiContext(commands.Context):
 
     def __init__(self, **attrs):
         super().__init__(**attrs)
+        self.settings = functools.partial(self.bot.cache.settings, self.guild.id)
+        self.fresh_cache = functools.partial(self.bot.cache.fresh_cache, self.guild.id)
 
     @staticmethod
     def new_menu(entries: MenuEntries, *, title: Optional[str] = ""):

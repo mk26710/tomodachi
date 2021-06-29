@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from contextlib import asynccontextmanager
 
 import orjson
 import aioredis
@@ -22,6 +23,13 @@ class Cache:
     def __init__(self, bot: Tomodachi) -> None:
         self.bot = bot
         self.redis = aioredis.from_url(bot.config.REDIS_URI, decode_responses=True)
+
+    @asynccontextmanager
+    async def fresh_cache(self, guild_id: int):
+        try:
+            yield None
+        finally:
+            await self.refresh_settings(guild_id)
 
     async def refresh_settings(self, guild_id: int):
         async with self.bot.db.pool.acquire() as conn:
@@ -42,6 +50,11 @@ class Cache:
             raise CacheFail(f"{guild_id} doesn't exist in the mod_settings table.")
 
         await self.redis.set(f"MS-{guild_id}", orjson.dumps(dict(record)))
+
+    @asynccontextmanager
+    async def settings(self, guild_id: int):
+        settings = await self.get_settings(guild_id)
+        yield settings
 
     async def get_settings(self, guild_id: int, *, refresh: bool = True):
         data = await self.redis.get(f"MS-{guild_id}")
