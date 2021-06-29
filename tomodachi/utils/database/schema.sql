@@ -71,9 +71,10 @@ create index infractions_guild_id_mod_id_target_id_idx
 -- mod_settings
 create table if not exists public.mod_settings
 (
-    guild_id  bigint,
-    mute_role bigint,
-    mod_roles bigint[] default '{}',
+    guild_id          bigint,
+    mute_role         bigint,
+    mod_roles         bigint[] default '{}'::bigint[],
+    audit_infractions boolean  default true,
 
     unique (guild_id),
 
