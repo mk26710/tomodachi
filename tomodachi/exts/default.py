@@ -7,29 +7,13 @@
 import discord
 from discord.ext import commands
 
-from tomodachi.core import CogMixin, TomodachiContext, is_manager
+from tomodachi.core import CogMixin
 
 
 class Default(CogMixin, icon=discord.PartialEmoji(name=":file_folder:")):
     @commands.command()
     async def hello(self, ctx: commands.Context):
         await ctx.send(f"Hello, {ctx.author.name}! I'm {ctx.bot.user.name}.")
-
-    @commands.guild_only()
-    @commands.check_any(is_manager(), commands.is_owner())
-    @commands.group(help="Group of configuration commands")
-    async def config(self, ctx: TomodachiContext):
-        if not ctx.invoked_subcommand:
-            await ctx.send(f"See `{ctx.prefix}help config` to learn about subcommands.")
-
-    @config.command(help="Changes prefix of a bot in this server")
-    async def prefix(self, ctx: TomodachiContext, new_prefix: str = None):
-        if not new_prefix:
-            current_prefix = self.bot.prefixes.get(ctx.guild.id) or self.bot.config.DEFAULT_PREFIX
-            return await ctx.send(f"Prefix in this server is `{current_prefix}`")
-
-        prefix = await self.bot.update_prefix(ctx.guild.id, new_prefix)
-        await ctx.send(f"Updated prefix in the server to `{prefix}`")
 
 
 def setup(bot):
