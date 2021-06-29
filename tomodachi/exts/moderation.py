@@ -150,7 +150,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
     # fmt: on
     async def clear(self, ctx: TomodachiContext, target: Optional[MemberUser] = None, amount: int = 50):
         if amount > 1000:
-            return await ctx.send(f":x: You can bulk delete only up to `1000` messages!")
+            return await ctx.send(":x: You can bulk delete only up to `1000` messages!")
 
         def check(m):
             if isinstance(target, (discord.Member, discord.User)):
