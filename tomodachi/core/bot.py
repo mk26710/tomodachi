@@ -76,6 +76,9 @@ class Tomodachi(commands.AutoShardedBot):
             await self.session.close()
 
         await self.db.disconnect()
+        await self.cache.redis.flushdb(True)
+        await self.cache.redis.close()
+
         await super().close()
 
     async def get_prefix(self, message: discord.Message):
