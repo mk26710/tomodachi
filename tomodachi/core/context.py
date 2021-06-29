@@ -34,3 +34,9 @@ class TomodachiContext(commands.Context):
     @staticmethod
     def new_menu(entries: MenuEntries, *, title: Optional[str] = ""):
         return TomodachiMenu(entries, title=title)
+
+    async def get_settings(self):
+        return await self.bot.cache.get_settings(self.guild.id)
+
+    async def refresh_cache(self):
+        await self.bot.cache.refresh_settings(self.guild.id)
