@@ -10,12 +10,14 @@ from typing import List, Optional
 
 import attr
 
-__all__ = ["ModSettings"]
+__all__ = ["Settings"]
 
 
 @attr.s(slots=True, auto_attribs=True)
-class ModSettings:
+class Settings:
     guild_id: Optional[int] = None
+    prefix: Optional[str] = None
+    lang: Optional[str] = "en_US"
     mute_role: Optional[int] = None
     mod_roles: Optional[List[int]] = []
     audit_infractions: Optional[bool] = True
