@@ -8,15 +8,6 @@ import ujson
 import discord
 
 
-class EmbedOverridden(discord.Embed):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.colour = 0x2F3136
-
-
-discord.Embed = EmbedOverridden
-
-
 def to_json(obj):
     return ujson.dumps(obj, ensure_ascii=True)
 
