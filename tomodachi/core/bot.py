@@ -84,7 +84,7 @@ class Tomodachi(commands.AutoShardedBot):
         return [f"<@!{self.user.id}> ", f"<@{self.user.id}> ", prefix]
 
     async def update_prefix(self, guild_id: int, new_prefix: str):
-        async with self.cache.refresh_settings(guild_id):
+        async with self.cache.fresh_cache(guild_id):
             prefix = await self.db.update_prefix(guild_id, new_prefix)
         return prefix
 
