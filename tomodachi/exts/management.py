@@ -24,8 +24,10 @@ class Management(CogMixin):
 
     @config.command(help="Changes prefix of a bot in this server")
     async def prefix(self, ctx: TomodachiContext, new_prefix: str = None):
+        settings = await ctx.get_settings()
+
         if not new_prefix:
-            current_prefix = self.bot.prefixes.get(ctx.guild.id) or self.bot.config.DEFAULT_PREFIX
+            current_prefix = settings.prefix or self.bot.config.DEFAULT_PREFIX
             return await ctx.send(f"Prefix in this server is `{current_prefix}`")
 
         prefix = await self.bot.update_prefix(ctx.guild.id, new_prefix)
