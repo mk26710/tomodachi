@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Union, Optional
+from typing import TYPE_CHECKING, Union, Optional
 from datetime import datetime
 
 import discord
@@ -15,8 +15,10 @@ from discord.ext import commands
 from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils import i, helpers, timestamp
 from tomodachi.core.enums import InfractionType
-from tomodachi.core.infractions import Infraction
 from tomodachi.utils.converters import TimeUnit
+
+if TYPE_CHECKING:
+    from tomodachi.core.infractions import Infraction
 
 MemberUser = Union[discord.Member, discord.User]
 
@@ -53,14 +55,12 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
                 reason = f"Infraction #{infraction.id} has expired."
                 await guild.unban(user=obj, reason=reason)
                 await self.bot.infractions.create(
-                    Infraction(
-                        inf_type=InfractionType.UNBAN,
-                        guild_id=guild.id,
-                        target_id=obj.id,
-                        expires_at=None,
-                        reason=reason,
-                    ),
-                    permanent=True,
+                    inf_type=InfractionType.UNBAN,
+                    guild_id=guild.id,
+                    target_id=obj.id,
+                    expires_at=None,
+                    reason=reason,
+                    create_action=False,
                 )
             except (discord.Forbidden, discord.HTTPException):
                 return  # todo: once modlogs are created, log this to inform mods about failure
@@ -76,16 +76,15 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         except (discord.Forbidden, discord.HTTPException):
             raise
 
-        inf = Infraction(
+        inf = await self.bot.infractions.create(
             inf_type=InfractionType.PERMABAN,
             expires_at=None,
             guild_id=ctx.guild.id,
             mod_id=ctx.author.id,
             target_id=target.id,
             reason=reason,
+            create_action=False,
         )
-
-        inf = await self.bot.infractions.create(inf, permanent=True)
         content = f":ok_hand: **{target}** (`{target.id}`) was banned for: `{reason}` (`#{inf.id}`)"
 
         await ctx.send(content)
@@ -105,7 +104,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         except (discord.Forbidden, discord.HTTPException):
             raise
 
-        inf = Infraction(
+        inf = await self.bot.infractions.create(
             inf_type=InfractionType.TEMPBAN,
             expires_at=unban_at,
             guild_id=ctx.guild.id,
@@ -113,7 +112,6 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
             target_id=target.id,
             reason=reason,
         )
-        inf = await self.bot.infractions.create(inf)
         content = (
             f":ok_hand: **{target}** (`{target.id}`) was temp-banned until **{when:F}** for: `{reason}` (`#{inf.id}`)"
         )
@@ -131,14 +129,14 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         except (discord.Forbidden, discord.HTTPException):
             raise
 
-        inf = Infraction(
+        inf = await self.bot.infractions.create(
             inf_type=InfractionType.KICK,
             guild_id=ctx.guild.id,
             mod_id=ctx.author.id,
             target_id=target.id,
             reason=reason,
+            create_action=False,
         )
-        inf = await self.bot.infractions.create(inf, permanent=True)
         content = f":ok_hand: **{target}** (`{target.id}`) was kicked for: `{reason}` (`#{inf.id}`)"
 
         await ctx.send(content)
