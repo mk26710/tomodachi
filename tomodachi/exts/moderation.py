@@ -12,7 +12,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from tomodachi.core import CogMixin, TomodachiContext
+from tomodachi.core import CogMixin, TomodachiContext, checks
 from tomodachi.utils import i, helpers, timestamp
 from tomodachi.core.enums import InfractionType
 from tomodachi.utils.converters import TimeUnit
@@ -65,8 +65,8 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
             except (discord.Forbidden, discord.HTTPException):
                 return  # todo: once modlogs are created, log this to inform mods about failure
 
-    @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.check_any(commands.has_guild_permissions(ban_members=True), checks.is_mod())
     @commands.command(aliases=["permaban"], help="Permanently bans a user from the server")
     async def ban(self, ctx: TomodachiContext, target: MemberUser, *, reason: str = None):
         reason = reason or "No reason."
@@ -89,8 +89,8 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
 
         await ctx.send(content)
 
-    @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.check_any(commands.has_guild_permissions(ban_members=True), checks.is_mod())
     @commands.command(help="Bans a user for specified period time")
     async def tempban(self, ctx: TomodachiContext, target: MemberUser, duration: TimeUnit, *, reason: str = None):
         reason = reason or "No reason."
@@ -118,8 +118,8 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
 
         await ctx.send(content)
 
-    @commands.has_guild_permissions(kick_members=True)
     @commands.bot_has_guild_permissions(kick_members=True)
+    @commands.check_any(commands.has_guild_permissions(kick_members=True), checks.is_mod())
     @commands.command(help="Kicks a member from the server")
     async def kick(self, ctx: TomodachiContext, target: discord.Member, *, reason: str = None):
         reason = reason or "No reason."
@@ -142,8 +142,8 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         await ctx.send(content)
 
     # fmt: off
-    @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_guild_permissions(manage_messages=True)
+    @commands.check_any(commands.has_guild_permissions(manage_messages=True), checks.is_mod())
     @commands.command(aliases=["purge", "prune"], help="Deletes specified amount of messages", description="Messages of a specified user will be deleted if target was provided")  # noqa
     # fmt: on
     async def clear(self, ctx: TomodachiContext, target: Optional[MemberUser] = None, amount: int = 50):
