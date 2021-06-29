@@ -8,11 +8,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+import discord
 from discord.ext import commands
-from discord.role import Role
-from discord.embeds import Embed
-from discord.object import Object
-from discord.ext.commands.converter import Greedy
 
 from tomodachi.core import checks
 from tomodachi.core.cog import CogMixin
@@ -48,9 +45,9 @@ class Management(CogMixin):
     async def mod_roles(self, ctx: TomodachiContext):
         if not ctx.invoked_subcommand:
             settings = await self.get_mod_settings(ctx.guild.id)
-            roles = [ctx.guild.get_role(r_id) or Object(id=r_id) for r_id in settings.mod_roles]
+            roles = [ctx.guild.get_role(r_id) or discord.Object(id=r_id) for r_id in settings.mod_roles]
 
-            embed = Embed()
+            embed = discord.Embed()
             embed.color = 0x5865F2
             embed.description = "\n".join(getattr(r, "mention", "deleted-role") + f" (`{r.id}`)" for r in roles)
             embed.title = f"Mod Roles | {ctx.guild.name}"
@@ -58,7 +55,7 @@ class Management(CogMixin):
             await ctx.send(embed=embed)
 
     @mod_roles.command(name="add")
-    async def mod_roles_add(self, ctx: TomodachiContext, roles: Greedy[Role]):
+    async def mod_roles_add(self, ctx: TomodachiContext, roles: commands.Greedy[discord.Role]):
         settings = await self.get_mod_settings(ctx.guild.id)
 
         to_add = [r for r in set(roles) if r.id not in settings.mod_roles]
@@ -73,7 +70,7 @@ class Management(CogMixin):
             is_added = await conn.fetchval(query, ctx.guild.id, [r.id for r in to_add])
 
         if is_added:
-            e = Embed()
+            e = discord.Embed()
             e.color = 0x2ECC71
             e.description = "\n".join(f"+ {r.mention} (`{r.id}`)" for r in to_add)
             e.title = f"Mod Roles Added | {ctx.guild.name}"
@@ -81,7 +78,7 @@ class Management(CogMixin):
             await ctx.send(embed=e)
 
     @mod_roles.command(name="remove", aliases=["rmv", "delete", "del"])
-    async def mod_roles_remove(self, ctx: TomodachiContext, roles: Greedy[Role]):
+    async def mod_roles_remove(self, ctx: TomodachiContext, roles: commands.Greedy[discord.Role]):
         settings = await self.get_mod_settings(ctx.guild.id)
 
         to_delete = [r for r in set(roles) if r.id in settings.mod_roles]
@@ -98,7 +95,7 @@ class Management(CogMixin):
             removed = await conn.fetchval(query, ctx.guild.id, [r.id for r in to_delete])
 
         if removed:
-            e = Embed()
+            e = discord.Embed()
             e.color = 0xFF0000
             e.description = "\n".join(f"- {r.mention} (`{r.id}`)" for r in to_delete)
             e.title = f"No longer Mod Roles | {ctx.guild.name}"
