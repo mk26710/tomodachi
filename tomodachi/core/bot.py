@@ -79,16 +79,14 @@ class Tomodachi(commands.AutoShardedBot):
         await super().close()
 
     async def get_prefix(self, message: discord.Message):
-        return [
-            f"<@!{self.user.id}> ",
-            f"<@{self.user.id}> ",
-            self.prefixes.get(message.guild.id) or config.DEFAULT_PREFIX,
-        ]
+        async with self.cache.settings(message.guild.id) as settings:
+            prefix = settings.prefix or config.DEFAULT_PREFIX
+        return [f"<@!{self.user.id}> ", f"<@{self.user.id}> ", prefix]
 
     async def update_prefix(self, guild_id: int, new_prefix: str):
-        prefix = await self.db.update_prefix(guild_id, new_prefix)
-        self.prefixes[guild_id] = prefix
-        return self.prefixes[guild_id]
+        async with self.cache.refresh_settings(guild_id):
+            prefix = await self.db.update_prefix(guild_id, new_prefix)
+        return prefix
 
     async def get_context(self, message, *, cls=None) -> Union[TomodachiContext, commands.Context]:
         return await super().get_context(message, cls=cls or TomodachiContext)
