@@ -161,3 +161,15 @@ class Tomodachi(commands.AutoShardedBot):
         for ext in config.EXTENSIONS:
             self.load_extension(f"tomodachi.exts.{ext}")
             logging.info(f"loaded {ext}")
+
+    async def get_or_fetch_user(self, user_id: int) -> discord.User:
+        """Retrives a discord.User object from cache or fetches it if not cached"""
+        return self.get_user(user_id) or (await self.fetch_user(user_id))
+
+    async def get_or_fetch_member(self, guild: discord.Guild, user_id: int):
+        """Retrives a discord.Member oject from cache or fetches it if not cached"""
+        return guild.get_member(user_id) or (await guild.fetch_member(user_id))
+
+    async def get_or_fetch_guild(self, guild_id: int) -> discord.Guild:
+        """Retrives a discord.Guild oject from cache or fetches it if not cached"""
+        return self.get_guild(guild_id) or (await self.fetch_guild(guild_id))
