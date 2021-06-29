@@ -40,16 +40,30 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
     async def on_expired_infraction(self, infraction: Infraction):
         await self.bot.wait_until_ready()
 
+        # created target object
+        obj = discord.Object(id=infraction.target_id)
+
         try:
-            guild = self.bot.get_guild(infraction.guild_id) or await self.bot.fetch_guild(infraction.guild_id)
+            guild = await self.bot.get_or_fetch_guild(infraction.guild_id)
         except (discord.Forbidden, discord.HTTPException):
             return
 
-        try:
-            obj = discord.Object(id=infraction.target_id)
-            await guild.unban(user=obj, reason=f"Infraction #{infraction.id} has expired.")
-        except (discord.Forbidden, discord.HTTPException):
-            return  # todo: once modlogs are created, log this to inform mods about failure
+        if infraction.inf_type is InfractionType.TEMPBAN:
+            try:
+                reason = f"Infraction #{infraction.id} has expired."
+                await guild.unban(user=obj, reason=reason)
+                await self.bot.infractions.create(
+                    Infraction(
+                        inf_type=InfractionType.UNBAN,
+                        guild_id=guild.id,
+                        target_id=obj.id,
+                        expires_at=None,
+                        reason=reason,
+                    ),
+                    permanent=True,
+                )
+            except (discord.Forbidden, discord.HTTPException):
+                return  # todo: once modlogs are created, log this to inform mods about failure
 
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
