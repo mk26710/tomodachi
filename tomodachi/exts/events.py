@@ -13,8 +13,7 @@ from tomodachi.core import CogMixin
 class Events(CogMixin):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
-        query = "INSERT INTO guilds (guild_id, prefix) VALUES ($1, $2) ON CONFLICT DO NOTHING;"
-        await self.bot.db.pool.execute(query, guild.id, self.bot.config.DEFAULT_PREFIX)
+        await self.bot.db.store_guild(guild.id)
 
 
 def setup(bot):
