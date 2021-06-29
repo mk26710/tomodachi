@@ -6,25 +6,15 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 import discord
 from discord.ext import commands
 
 from tomodachi.core import checks
 from tomodachi.core.cog import CogMixin
-from tomodachi.core.models import ModSettings
 from tomodachi.core.context import TomodachiContext
 
 
 class Management(CogMixin):
-    async def get_mod_settings(self, guild_id: int) -> Optional[ModSettings]:
-        async with self.bot.db.pool.acquire() as conn:
-            query = "select * from mod_settings where guild_id = $1;"
-            record = await conn.fetchrow(query, guild_id)
-
-        return ModSettings(**record) if record else None
-
     @commands.guild_only()
     @commands.check_any(checks.is_manager(), commands.is_owner())
     @commands.group(help="Group of configuration commands", aliases=["cfg"])
@@ -44,7 +34,7 @@ class Management(CogMixin):
     @config.group()
     async def mod_roles(self, ctx: TomodachiContext):
         if not ctx.invoked_subcommand:
-            settings = await self.get_mod_settings(ctx.guild.id)
+            settings = await ctx.get_settings()
             roles = [ctx.guild.get_role(r_id) or discord.Object(id=r_id) for r_id in settings.mod_roles]
 
             embed = discord.Embed()
@@ -56,7 +46,7 @@ class Management(CogMixin):
 
     @mod_roles.command(name="add")
     async def mod_roles_add(self, ctx: TomodachiContext, roles: commands.Greedy[discord.Role]):
-        settings = await self.get_mod_settings(ctx.guild.id)
+        settings = await ctx.get_settings()
 
         to_add = [r for r in set(roles) if r.id not in settings.mod_roles]
         if not to_add:
@@ -76,10 +66,11 @@ class Management(CogMixin):
             e.title = f"Mod Roles Added | {ctx.guild.name}"
 
             await ctx.send(embed=e)
+        await ctx.refresh_cache()
 
     @mod_roles.command(name="remove", aliases=["rmv", "delete", "del"])
     async def mod_roles_remove(self, ctx: TomodachiContext, roles: commands.Greedy[discord.Role]):
-        settings = await self.get_mod_settings(ctx.guild.id)
+        settings = await ctx.get_settings()
 
         to_delete = [r for r in set(roles) if r.id in settings.mod_roles]
         await ctx.send(f"{to_delete=}")
@@ -101,6 +92,7 @@ class Management(CogMixin):
             e.title = f"No longer Mod Roles | {ctx.guild.name}"
 
             await ctx.send(embed=e)
+        await ctx.refresh_cache()
 
 
 def setup(bot):
