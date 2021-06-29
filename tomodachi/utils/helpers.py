@@ -79,10 +79,6 @@ def make_intents():
 
 
 def make_progress_bar(position: float, total: float, *, length: int = 15, filler="█", emptiness=" ", in_brackets=False):
-    bar = ""
     target_pos = (position * 100) / total
-
-    for i in range(1, length + 1):
-        i_pos = round(i * 100 / length)
-        bar += filler if i_pos <= target_pos else emptiness
+    bar = "".join(filler if round(i * 100 / length) <= target_pos else emptiness for i in range(1, length + 1))
     return bar if not in_brackets else f"[{bar}]"
