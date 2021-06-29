@@ -84,7 +84,7 @@ class Management(CogMixin):
         to_delete = [r for r in set(roles) if r.id in settings.mod_roles]
         await ctx.send(f"{to_delete=}")
         if not to_delete:
-            return await ctx.send(f":x: Provided roles are not Mod Roles.")
+            return await ctx.send(":x: Provided roles are not Mod Roles.")
 
         async with self.bot.db.pool.acquire() as conn:
             query = """update mod_settings as ms
