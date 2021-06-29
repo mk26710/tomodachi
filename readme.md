@@ -9,5 +9,6 @@ so it doesn't really have that lots of features.
 
 ## Requirements
 
- - PostgreSQL 12+
- - Python 3.9
+ - PostgreSQL >= 12
+ - Redis >= 6.2.4
+ - Python >= 3.9
