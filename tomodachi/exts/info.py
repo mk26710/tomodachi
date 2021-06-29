@@ -14,7 +14,7 @@ from aiohttp import ClientResponseError
 from discord.ext import flags, commands
 
 from tomodachi.core import CogMixin, TomodachiContext
-from tomodachi.utils import timestamp, humanize_flags, humanize_activity, make_progress_bar, i
+from tomodachi.utils import helpers, timestamp, humanize_flags, humanize_activity, make_progress_bar, i
 
 
 class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=742312550821134396)):
@@ -138,7 +138,7 @@ class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=74231255
 
         track_url = f"https://open.spotify.com/track/{activity.track_id}"
 
-        current_pos = datetime.utcnow() - activity.start
+        current_pos = helpers.utcnow() - activity.start
         bar = make_progress_bar(
             current_pos.seconds,
             activity.duration.seconds,
