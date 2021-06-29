@@ -52,7 +52,6 @@ class Tomodachi(commands.AutoShardedBot):
         self.actions = Actions(self)
         self.infractions = Infractions(self)
 
-        self.prefixes = {}
         # list with user ids
         self.blacklist = []
 
@@ -67,7 +66,6 @@ class Tomodachi(commands.AutoShardedBot):
 
         # Fetch custom prefixes and blacklisted users
         self.loop.create_task(self.fetch_blacklist())
-        self.loop.create_task(self.fetch_prefixes())
 
     async def close(self):
         self.actions.task.cancel()
@@ -82,6 +80,8 @@ class Tomodachi(commands.AutoShardedBot):
         await super().close()
 
     async def get_prefix(self, message: discord.Message):
+        await self.db.wait_until_connected()
+
         async with self.cache.settings(message.guild.id) as settings:
             prefix = settings.prefix or config.DEFAULT_PREFIX
         return [f"<@!{self.user.id}> ", f"<@{self.user.id}> ", prefix]
@@ -119,14 +119,6 @@ class Tomodachi(commands.AutoShardedBot):
             return await ctx.reply(f"You are being rate limited for `{retry_after:.2f}` seconds.")
 
         await self.invoke(ctx)
-
-    async def fetch_prefixes(self):
-        await self.db.wait_until_connected()
-
-        async with self.pool.acquire() as conn:
-            records = await conn.fetch("SELECT guild_id, prefix FROM guilds;")
-
-        self.prefixes.update({k: v for k, v in map(tuple, records)})
 
     async def temp_block(self, user_id: int, delay: Union[float, int]):
         """Temporary adds a user by their ID to the bot's blacklist"""
