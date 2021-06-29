@@ -95,10 +95,10 @@ class Actions:
 
     async def get_action(self):
         async with self.bot.pool.acquire() as conn:
-            query = """SELECT * 
-                FROM actions 
+            query = """SELECT *
+                FROM actions
                 WHERE (CURRENT_TIMESTAMP + '28 days'::interval) > actions.trigger_at
-                ORDER BY actions.trigger_at 
+                ORDER BY actions.trigger_at
                 LIMIT 1;"""
             stmt = await conn.prepare(query)
             record = await stmt.fetchrow()
@@ -120,7 +120,7 @@ class Actions:
             await conn.set_type_codec("jsonb", encoder=ujson.dumps, decoder=ujson.loads, schema="pg_catalog")
 
             query = """INSERT INTO actions (action_type, trigger_at, author_id, guild_id, channel_id, message_id, extra)
-                VALUES ($1, $2, $3, $4, $5, $6, $7) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
                 RETURNING *;"""
             stmt = await conn.prepare(query)
             record = await stmt.fetchrow(
