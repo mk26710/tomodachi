@@ -6,7 +6,6 @@
 
 import io
 from typing import Union
-from datetime import datetime
 from collections import Counter
 
 import discord
