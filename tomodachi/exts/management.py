@@ -52,12 +52,13 @@ class Management(CogMixin):
         if not to_add:
             return await ctx.send(":x: Nothing changed. Make sure that provided roles aren't Mod Roles already!")
 
-        async with self.bot.db.pool.acquire() as conn:
-            query = """insert into mod_settings as ms (guild_id, mod_roles) values ($1, $2)
-                on conflict (guild_id) do update set mod_roles = ms.mod_roles || $2::bigint[]
-                returning true;"""
+        async with ctx.fresh_cache():
+            async with self.bot.db.pool.acquire() as conn:
+                query = """insert into mod_settings as ms (guild_id, mod_roles) values ($1, $2)
+                    on conflict (guild_id) do update set mod_roles = ms.mod_roles || $2::bigint[]
+                    returning true;"""
 
-            is_added = await conn.fetchval(query, ctx.guild.id, [r.id for r in to_add])
+                is_added = await conn.fetchval(query, ctx.guild.id, [r.id for r in to_add])
 
         if is_added:
             e = discord.Embed()
@@ -66,7 +67,6 @@ class Management(CogMixin):
             e.title = f"Mod Roles Added | {ctx.guild.name}"
 
             await ctx.send(embed=e)
-        await ctx.refresh_cache()
 
     @mod_roles.command(name="remove", aliases=["rmv", "delete", "del"])
     async def mod_roles_remove(self, ctx: TomodachiContext, roles: commands.Greedy[discord.Role]):
@@ -77,13 +77,14 @@ class Management(CogMixin):
         if not to_delete:
             return await ctx.send(":x: Provided roles are not Mod Roles.")
 
-        async with self.bot.db.pool.acquire() as conn:
-            query = """update mod_settings as ms
-                set mod_roles = (select array(select unnest(ms.mod_roles) except select unnest($2::bigint[])))
-                where guild_id = $1
-                returning true;"""
+        async with ctx.fresh_cache():
+            async with self.bot.db.pool.acquire() as conn:
+                query = """update mod_settings as ms
+                    set mod_roles = (select array(select unnest(ms.mod_roles) except select unnest($2::bigint[])))
+                    where guild_id = $1
+                    returning true;"""
 
-            removed = await conn.fetchval(query, ctx.guild.id, [r.id for r in to_delete])
+                removed = await conn.fetchval(query, ctx.guild.id, [r.id for r in to_delete])
 
         if removed:
             e = discord.Embed()
@@ -92,7 +93,6 @@ class Management(CogMixin):
             e.title = f"No longer Mod Roles | {ctx.guild.name}"
 
             await ctx.send(embed=e)
-        await ctx.refresh_cache()
 
 
 def setup(bot):
