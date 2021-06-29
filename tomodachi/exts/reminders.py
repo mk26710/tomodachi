@@ -158,8 +158,8 @@ class Reminders(CogMixin, icon=discord.PartialEmoji(name=":stopwatch:")):
     @reminder.command(name="purge", aliases=["clear"])
     async def reminder_purge(self, ctx: TomodachiContext):
         async with self.bot.db.pool.acquire() as conn:
-            query = """WITH deleted AS (DELETE FROM actions WHERE author_id=$1 AND action_type='REMINDER' RETURNING *) 
-                SELECT count(*) 
+            query = """WITH deleted AS (DELETE FROM actions WHERE author_id=$1 AND action_type='REMINDER' RETURNING *)
+                SELECT count(*)
                 FROM deleted;"""
             stmt = await conn.prepare(query)
             count: int = await stmt.fetchval(ctx.author.id)
