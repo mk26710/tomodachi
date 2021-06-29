@@ -24,8 +24,6 @@ class Cache:
         self.redis = aioredis.from_url(bot.config.REDIS_URI, decode_responses=True)
 
     async def refresh_settings(self, guild_id: int):
-        print(f"refreshing {guild_id} ")
-
         async with self.bot.db.pool.acquire() as conn:
             query = """select
                 g.guild_id,
