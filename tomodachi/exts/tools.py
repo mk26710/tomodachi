@@ -23,7 +23,7 @@ from tomodachi.utils.converters import TimeUnit
 EmojiProxy = Union[discord.Emoji, discord.PartialEmoji]
 
 
-class Tools(CogMixin, icon=discord.PartialEmoji(name=":tools:")):
+class Tools(CogMixin, icon=discord.PartialEmoji(name=":file_folder:")):
     @staticmethod
     async def get_image_url(message: discord.Message, user: Union[discord.Member, discord.User] = None):
         url = None
