@@ -14,7 +14,7 @@ from discord.ext import commands
 if TYPE_CHECKING:
     from tomodachi.core.context import TomodachiContext
 
-__all__ = ["is_manager", "is_mod"]
+__all__ = ["is_manager", "is_mod", "reminders_limit"]
 
 
 def is_manager():
@@ -38,5 +38,20 @@ def is_mod():
         author_roles = [r.id for r in ctx.author.roles]
 
         return any(r_id in author_roles for r_id in settings.mod_roles)
+
+    return commands.check(predicate)
+
+
+def reminders_limit():
+    async def predicate(ctx: TomodachiContext):
+        async with ctx.bot.pool.acquire() as conn:
+            query = "SELECT count(id) FROM actions WHERE author_id = $1 AND action_type = 'REMINDER';"
+            stmt = await conn.prepare(query)
+            count = await stmt.fetchval(ctx.author.id)
+
+        if count >= 250:
+            raise commands.CheckFailure("Reached the limit of 250 reminders.")
+
+        return True
 
     return commands.check(predicate)
