@@ -5,11 +5,12 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-import asyncio
 
+import asyncio
 import functools
 import itertools
-from typing import Callable, List, Union
+from typing import List, Optional, Union, Callable
+from contextlib import suppress
 
 import discord
 from discord.ext import commands
@@ -23,7 +24,7 @@ Commands = List[Union[commands.Command, commands.Group]]
 
 class HelpView(discord.ui.View):
     def __init__(self):
-        super().__init__(timeout=90.0)
+        super().__init__(timeout=45.0)
 
 
 class HelpButton(discord.ui.Button):
@@ -31,9 +32,9 @@ class HelpButton(discord.ui.Button):
         super().__init__(style=discord.ButtonStyle.gray, label=label, emoji=icon, row=row)
         self.__callback = callback
 
-    async def callback(self, _interaction: discord.Interaction):
-        self.view.stop()
+    async def callback(self, _interaction):
         await self.__callback()
+        self.view.stop()
 
 
 class TomodachiHelpCommand(commands.MinimalHelpCommand):
@@ -41,7 +42,17 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
 
     def __init__(self, **options):
         super().__init__(**options, command_attrs=dict(hidden=True))
+        self.view: Optional[HelpView] = HelpView()
         self._e_colour = 0x2F3136
+
+    async def cleanup_view(self, msg):
+        timed_out = await self.view.wait()
+
+        with suppress(discord.HTTPException, discord.NotFound):
+            if not timed_out:
+                await msg.delete()
+            else:
+                await msg.edit(view=None)
 
     async def send_pages(self):
         e = discord.Embed(colour=self._e_colour)
@@ -68,11 +79,10 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         filtered: Commands = await self.filter_commands(self.context.bot.commands, sort=True, key=get_category)
 
         # create help buttons
-        view = HelpView()
         for n, cog in enumerate({c.cog for c in filtered}):
             callback = functools.partial(self.context.send_help, cog.qualified_name)
             btn = HelpButton(cog.qualified_name, cog.icon, callback, row=n // 4)
-            view.add_item(btn)
+            self.view.add_item(btn)
 
         igrouped = itertools.groupby(filtered, key=get_category)
         # cast iterators to tuples because we need to reuse values of it
@@ -86,17 +96,11 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
 
         for category, _commands in ordered:
             _commands = sorted(_commands, key=lambda c: c.name)
-            embed.add_field(name=category, value=" ".join(f"`{c.qualified_name}`" for c in _commands), inline=False)
+            embed.add_field(name=category, value=" ".join(f"`{c.qualified_name}`" for c in _commands), inline=True)
 
         channel = self.get_destination()
-        msg = await channel.send(embed=embed, view=view)
-
-        # cleanup the message from views once user interacted or view timed out
-        async def cleanup_view():
-            await view.wait()
-            await msg.edit(view=None)
-
-        asyncio.create_task(cleanup_view())
+        msg = await channel.send(embed=embed, view=self.view)
+        asyncio.create_task(self.cleanup_view(msg))
 
     async def send_cog_help(self, cog: CogMixin):
         description = ""
