@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import functools
 import itertools
-from typing import List, Optional, Union, Callable
+from typing import List, Union, Callable
 from contextlib import suppress
 
 import discord
@@ -32,7 +32,7 @@ class HelpButton(discord.ui.Button):
         super().__init__(style=discord.ButtonStyle.gray, label=label, emoji=icon, row=row)
         self.__callback = callback
 
-    async def callback(self, _interaction):
+    async def callback(self, interaction):
         await self.__callback()
         self.view.stop()
 
@@ -42,7 +42,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
 
     def __init__(self, **options):
         super().__init__(**options, command_attrs=dict(hidden=True))
-        self.view: Optional[HelpView] = HelpView()
+        self.view = HelpView()
         self._e_colour = 0x2F3136
 
     async def cleanup_view(self, msg):
@@ -65,6 +65,11 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         return fmt.format(self.context.prefix, command.qualified_name, command.short_doc)
 
     async def send_bot_help(self, _):
+        async def interaction_check(interaction: discord.Interaction):
+            return interaction.user.id == self.context.author.id
+
+        self.view.interaction_check = interaction_check
+
         embed = discord.Embed(
             colour=self._e_colour,
             description=self.get_opening_note(),
