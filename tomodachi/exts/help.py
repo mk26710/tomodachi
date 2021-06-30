@@ -5,9 +5,11 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+import asyncio
 
+import functools
 import itertools
-from typing import List, Union
+from typing import Callable, List, Union
 
 import discord
 from discord.ext import commands
@@ -17,6 +19,21 @@ from tomodachi.utils.icons import i
 
 # Type alias for a commands mapping, quite helpful
 Commands = List[Union[commands.Command, commands.Group]]
+
+
+class HelpView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=90.0)
+
+
+class HelpButton(discord.ui.Button):
+    def __init__(self, label: str, icon: discord.Emoji, callback: Callable, *, row=None):
+        super().__init__(style=discord.ButtonStyle.gray, label=label, emoji=icon, row=row)
+        self.__callback = callback
+
+    async def callback(self, _interaction: discord.Interaction):
+        self.view.stop()
+        await self.__callback()
 
 
 class TomodachiHelpCommand(commands.MinimalHelpCommand):
@@ -50,6 +67,13 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
 
         filtered: Commands = await self.filter_commands(self.context.bot.commands, sort=True, key=get_category)
 
+        # create help buttons
+        view = HelpView()
+        for n, cog in enumerate({c.cog for c in filtered}):
+            callback = functools.partial(self.context.send_help, cog.qualified_name)
+            btn = HelpButton(cog.qualified_name, cog.icon, callback, row=n // 4)
+            view.add_item(btn)
+
         igrouped = itertools.groupby(filtered, key=get_category)
         # cast iterators to tuples because we need to reuse values of it
         grouped = tuple((cat, tuple(cmds)) for cat, cmds in igrouped)
@@ -65,7 +89,14 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
             embed.add_field(name=category, value=" ".join(f"`{c.qualified_name}`" for c in _commands), inline=False)
 
         channel = self.get_destination()
-        await channel.send(embed=embed)
+        msg = await channel.send(embed=embed, view=view)
+
+        # cleanup the message from views once user interacted or view timed out
+        async def cleanup_view():
+            await view.wait()
+            await msg.edit(view=None)
+
+        asyncio.create_task(cleanup_view())
 
     async def send_cog_help(self, cog: CogMixin):
         description = ""
