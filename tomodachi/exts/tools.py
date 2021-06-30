@@ -42,6 +42,10 @@ class Tools(CogMixin, icon=discord.PartialEmoji(name=":tools:")):
         await ctx.send(f"\N{SQUARED KATAKANA KOKO} {selected}")
 
     @commands.command()
+    async def hello(self, ctx: commands.Context):
+        await ctx.send(f"Hello, {ctx.author.name}! I'm {ctx.bot.user.name}.")
+
+    @commands.command()
     @commands.cooldown(1, 10.0, commands.BucketType.user)
     async def caption(self, ctx: TomodachiContext, user: Union[discord.Member, discord.User] = None):
         """Caption an image"""
