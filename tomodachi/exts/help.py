@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 import functools
 import itertools
 from typing import List, Union, Callable
@@ -20,6 +21,8 @@ from tomodachi.utils.icons import i
 
 # Type alias for a commands mapping, quite helpful
 Commands = List[Union[commands.Command, commands.Group]]
+
+PREFIX_PLACEHOLDER = re.compile(r"%prefix%", re.MULTILINE)
 
 
 class HelpView(discord.ui.View):
@@ -122,7 +125,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
             for command in filtered:
                 description += self.format_command(command)
 
-        embed.description = description
+        embed.description = re.sub(PREFIX_PLACEHOLDER, self.context.prefix, description)
 
         await self.get_destination().send(embed=embed)
 
@@ -137,7 +140,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
             for command in filtered:
                 description += self.format_command(command)
 
-        embed.description = description
+        embed.description = re.sub(PREFIX_PLACEHOLDER, self.context.prefix, description)
 
         await self.get_destination().send(embed=embed)
 
@@ -155,7 +158,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
             description += f"\n\n{command.description}"
 
         if description:
-            embed.description = description
+            embed.description = re.sub(PREFIX_PLACEHOLDER, self.context.prefix, description)
 
         if cooldown := command._buckets._cooldown:  # noqa
             embed.add_field(name="Cooldown", value=f"{i:slowmode} {int(cooldown.per)} seconds")
