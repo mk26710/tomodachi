@@ -87,7 +87,7 @@ begin
     if _mod_id is not null then
         _sql := _sql || format(' and i.mod_id = %L ', _mod_id);
     end if;
-    _sql := _sql || ';';
+    _sql := _sql || ' limit 500;';
 
     return query execute _sql;
 end;
