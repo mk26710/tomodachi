@@ -67,6 +67,31 @@ create index infractions_action_id_idx
 create index infractions_guild_id_mod_id_target_id_idx
     on public.infractions (guild_id, mod_id, target_id);
 
+drop function if exists get_infractions;
+
+create or replace function get_infractions(_guild_id bigint, _inf_id bigint, _target_id bigint, _mod_id bigint)
+    returns setof infractions
+    language plpgsql
+as
+$$
+declare
+    _sql text;
+begin
+    _sql := format('select * from infractions i where i.guild_id = %L', _guild_id);
+    if _inf_id is not null then
+        _sql := _sql || format(' and i.id = %L ', _inf_id);
+    end if;
+    if _target_id is not null then
+        _sql := _sql || format(' and i.target_id = %L ', _target_id);
+    end if;
+    if _mod_id is not null then
+        _sql := _sql || format(' and i.mod_id = %L ', _mod_id);
+    end if;
+    _sql := _sql || ';';
+
+    return query execute _sql;
+end;
+$$;
 
 -- mod_settings
 create table if not exists public.mod_settings
