@@ -13,7 +13,6 @@ asyncpg = "^0.22.0"
 attrs = "^20.3.0"
 databases = "^0.4.3"
 discord-ext-menus = {git = "https://github.com/Rapptz/discord-ext-menus"}
-discord-flags = "^2.1.1"
 "discord.py" = {git = "https://github.com/Rapptz/discord.py.git"}
 fastapi = "^0.63.0"
 gTTS = "^2.2.2"

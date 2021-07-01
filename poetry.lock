@@ -180,19 +180,8 @@ reference = "master"
 resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
-name = "discord-flags"
-version = "2.1.1"
-description = "A Discord.py extension allowing you to pass flags as arguments."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-"discord.py" = ">=1.2.5"
-
-[[package]]
 name = "discord.py"
-version = "2.0.0a3324+g12e3eba0"
+version = "2.0.0a3328+g30605e6f"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -210,7 +199,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "12e3eba011632f26aa9da8e69a39f1c2cb43f412"
+resolved_reference = "30605e6f4ff7e8ed0627efacd1fc829dbe36298e"
 
 [[package]]
 name = "fastapi"
@@ -643,7 +632,7 @@ speed = ["uvloop"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "1605c215a8f913b91d466350aadda0159e8f77e98578fe365ce870c5ee0545c5"
+content-hash = "4e9b41765cdd742be8acbb97ca8344048131ab4df9e156f3087bc2611d783bdd"
 
 [metadata.files]
 aiohttp = [
@@ -746,10 +735,6 @@ databases = [
     {file = "databases-0.4.3.tar.gz", hash = "sha256:1521db7f6d3c581ff81b3552e130b27a13aefea2a57295e65738081831137afc"},
 ]
 discord-ext-menus = []
-discord-flags = [
-    {file = "discord-flags-2.1.1.tar.gz", hash = "sha256:0fba0574fd21f29cb395f1bf66251d6f0b8415a50c160f1363589300e0174848"},
-    {file = "discord_flags-2.1.1-py3-none-any.whl", hash = "sha256:91075d38cfe2a2b7be6cff656645ebbcde7ee3afe402c69d5163f2021f6c1d04"},
-]
 "discord.py" = []
 fastapi = [
     {file = "fastapi-0.63.0-py3-none-any.whl", hash = "sha256:98d8ea9591d8512fdadf255d2a8fa56515cdd8624dca4af369da73727409508e"},
