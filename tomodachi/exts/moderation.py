@@ -5,6 +5,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
+from tomodachi.core.menus import TomodachiMenu
 
 from typing import TYPE_CHECKING, Union, Optional
 from datetime import datetime
@@ -12,7 +13,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from tomodachi.core import CogMixin, TomodachiContext, checks
+from tomodachi.core import CogMixin, TomodachiContext, checks, infractions
 from tomodachi.utils import i, helpers, timestamp
 from tomodachi.core.enums import InfractionType
 from tomodachi.utils.converters import TimeUnit
@@ -21,6 +22,12 @@ if TYPE_CHECKING:
     from tomodachi.core.infractions import Infraction
 
 MemberUser = Union[discord.Member, discord.User]
+
+
+class InfractionSearchFlags(commands.FlagConverter, prefix="--", delimiter=""):
+    target: Optional[MemberUser]
+    mod: Optional[MemberUser]
+    id: Optional[int]
 
 
 class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_moderator", id=853548115756187648)):
@@ -159,6 +166,49 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         deleted = await ctx.channel.purge(limit=amount, check=check, before=info.created_at)
 
         await info.edit(content=f":ok_hand: Deleted `{len(deleted)}` messages")
+
+    @commands.group(aliases=["infraction", "inf"])
+    @commands.check_any(
+        commands.has_guild_permissions(kick_members=True),
+        commands.has_guild_permissions(ban_members=True),
+        checks.is_mod(),
+    )
+    async def infractions(self, ctx: TomodachiContext):
+        """Group of commands to manage infractions"""
+        if not ctx.subcommand_passed:
+            await ctx.send_help(infractions)
+
+    @infractions.command(name="search", enabled=False)  # todo: make the response look then enable
+    async def infractions_search(self, ctx: TomodachiContext, *, flags: InfractionSearchFlags):
+        """Searches through infractions history.
+
+        This command uses a command line syntax. You will be able to review up to 500 infraction records.
+
+        Available options:
+        `--id [number]` — unique infraction identifier
+        `--mod [user]` — moderator of the infraction
+        `--target [user]` — intruder
+
+        Some examples:
+        `%prefix%infractions search --target 576322791129743361 --mod @Tomodachi#9184`
+        `%prefix%infractions search --target 576322791129743361`
+        `%prefix%infractions search --mod @Tomodachi#9184`
+        `%prefix%infractions search --id 12345`
+
+        If you don't specify any flags, you will get information about the last 500 infractions on the server."""
+        inf_ls = await self.bot.infractions.get(
+            ctx.guild.id,
+            inf_id=flags.id,
+            target_id=getattr(flags.target, "id", None),
+            mod_id=getattr(flags.mod, "id", None),
+        )
+
+        if not inf_ls:
+            return await ctx.send(":x: Nothing was found!")
+
+        entries = [f"{inf}" for inf in inf_ls]
+        menu = TomodachiMenu(entries, title="Infractions")
+        await menu.start(ctx)
 
 
 def setup(bot):
