@@ -55,6 +55,16 @@ class Infractions:
             return None
         return Infraction(**record)
 
+    async def get(self, guild_id: int, *, inf_id: int = None, target_id: int = None, mod_id: int = None):
+        async with self.bot.db.pool.acquire() as conn:
+            query = "select * from get_infractions($1, $2, $3, $4);"
+            records = await conn.fetch(query, guild_id, inf_id, target_id, mod_id)
+
+        if not records:
+            return None
+
+        return [Infraction(**record) for record in records]
+
     async def create(
         self,
         infraction: Optional[Infraction] = None,
