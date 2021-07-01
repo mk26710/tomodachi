@@ -8,7 +8,7 @@ import sys
 import traceback
 
 import discord
-from discord.ext import flags, commands
+from discord.ext import commands
 
 from tomodachi.core import CogMixin, TomodachiContext
 
@@ -27,8 +27,6 @@ class ErrorHandler(CogMixin):
             commands.BadArgument,
             commands.MissingRequiredArgument,
             commands.MaxConcurrencyReached,
-            flags.ArgumentParsingError,
-            flags.DontExitArgumentParser,
         )
 
     @commands.Cog.listener()

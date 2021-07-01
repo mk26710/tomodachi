@@ -10,20 +10,23 @@ from collections import Counter
 
 import discord
 from aiohttp import ClientResponseError
-from discord.ext import flags, commands
+from discord.ext import commands
 
 from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.utils import helpers, timestamp, humanize_flags, humanize_activity, make_progress_bar, i
 
 
+class UserInfoFlags(commands.FlagConverter, prefix="--", delimiter=""):
+    steal: bool = False
+
+
 class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=742312550821134396)):
     @commands.cooldown(1, 3, commands.BucketType.user)
-    @flags.add_flag("--steal", "-s", action="store_true")
-    @commands.command(cls=flags.FlagCommand, aliases=["avy", "av"], help="Provides you an avatar of some discord user")
-    async def avatar(self, ctx: TomodachiContext, user: discord.User = None, **options):
+    @commands.command(aliases=["avy", "av"], help="Provides you an avatar of some discord user")
+    async def avatar(self, ctx: TomodachiContext, user: discord.User = None, *, flags: UserInfoFlags):
         user = user or ctx.author
 
-        urls = " | ".join(f"[{ext}]({user.avatar.with_static_format(format=ext)})" for ext in ("png", "jpeg", "webp"))
+        urls = " | ".join(f"[{ext}]({user.avatar.with_static_format(ext)})" for ext in ("png", "jpeg", "webp"))
         if user.avatar.is_animated():
             urls += f" | [gif]({user.avatar.url})"
 
@@ -34,7 +37,7 @@ class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=74231255
         )
         embed.set_image(url=f"{user.avatar.url}")
 
-        if not options["steal"]:
+        if not flags.steal:
             return await ctx.send(embed=embed)
 
         buf = io.BytesIO()
