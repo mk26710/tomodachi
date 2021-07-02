@@ -74,5 +74,5 @@ class Cache(CacheProto):
 
     async def close(self):
         self.settings = None
-        await self.cache.redis.flushdb(True)
+        await self.redis.flushdb(True)
         await self.redis.close()
