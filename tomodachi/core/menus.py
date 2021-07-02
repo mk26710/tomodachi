@@ -12,6 +12,7 @@ from typing import Any, Union, Optional, final
 
 import discord
 from discord.ext import menus, commands
+from discord.ext.menus.views import ViewMenuPages
 
 __all__ = ["TomodachiMenu"]
 
@@ -166,3 +167,49 @@ class TomodachiMenu(menus.Menu):
 
         finally:
             asyncio.create_task(self.cleanup(question))
+
+
+class MyViewMenuPages(ViewMenuPages):
+    def __init__(self, source, **kwargs):
+        super().__init__(source, **kwargs)
+        self._emoji_to_text = {
+            "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE}\ufe0f": "First page",
+            "\N{BLACK LEFT-POINTING TRIANGLE}\ufe0f": "Previous page",
+            "\N{BLACK RIGHT-POINTING TRIANGLE}\ufe0f": "Next page",
+            "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE}\ufe0f": "Last page",
+            "\N{BLACK SQUARE FOR STOP}\ufe0f": "Stop",
+        }
+
+    def build_view(self):
+        if not self.should_add_reactions():
+            return None
+
+        def make_callback(button):
+            async def callback(interaction):
+                if interaction.user.id not in {self.bot.owner_id, self._author_id, *self.bot.owner_ids}:
+                    return
+                if self.auto_defer:
+                    await interaction.response.defer()
+                try:
+                    if button.lock:
+                        async with self._lock:
+                            if self._running:
+                                await button(self, interaction)
+                    else:
+                        await button(self, interaction)
+                except Exception as exc:
+                    await self.on_menu_button_error(exc)
+
+            return callback
+
+        view = discord.ui.View(timeout=self.timeout)
+
+        for i, (emoji, button) in enumerate(self.buttons.items()):
+            label = self._emoji_to_text.get(emoji.name)
+
+            item = discord.ui.Button(style=discord.ButtonStyle.secondary, label=label, row=i // 5)
+            item.callback = make_callback(button)
+            view.add_item(item)
+
+        self.view = view
+        return view
