@@ -13,7 +13,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from tomodachi.core import CogMixin, TomodachiContext, checks, infractions
+from tomodachi.core import CogMixin, TomodachiContext, checks
 from tomodachi.utils import i, helpers, timestamp
 from tomodachi.core.enums import InfractionType
 from tomodachi.utils.converters import TimeUnit
@@ -176,7 +176,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
     async def infractions(self, ctx: TomodachiContext):
         """Group of commands to manage infractions"""
         if not ctx.subcommand_passed:
-            await ctx.send_help(infractions)
+            await ctx.send_help("infractions")
 
     @infractions.command(name="search", enabled=False)  # todo: make the response look then enable
     async def infractions_search(self, ctx: TomodachiContext, *, flags: InfractionSearchFlags):
