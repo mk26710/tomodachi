@@ -4,16 +4,25 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from typing import Union
+
 import discord
 from discord.ext import commands
+from datetime import timedelta
 
 from tomodachi.core import CogMixin
 from tomodachi.utils import helpers, timestamp
-from tomodachi.core.enums import ActionType
+from tomodachi.core.enums import ActionType, InfractionType
 from tomodachi.core.actions import Action
 
 
 class Events(CogMixin):
+    async def _disable_infractions_from_audit(self, guild_id: int):
+        async with self.bot.cache.fresh_cache(guild_id):
+            async with self.bot.db.pool.acquire() as conn:
+                query = "update mod_settings set audit_infractions=false where guild_id=$1;"
+                await conn.execute(query, guild_id)
+
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         await self.bot.db.store_guild(guild.id)
@@ -52,6 +61,115 @@ class Events(CogMixin):
             )
         except (discord.Forbidden, discord.HTTPException):
             pass
+
+    @commands.Cog.listener()
+    async def on_member_ban(self, guild: discord.Guild, user: Union[discord.User, discord.Member]):
+        now = helpers.utcnow()
+        settings = await self.bot.cache.get_settings(guild.id)
+
+        if not settings.audit_infractions:
+            return
+
+        # If bot doesn't have permissions to read audit logs
+        # better to disable infractions from manual actions
+        if not guild.me.guild_permissions.view_audit_log:
+            return await self._disable_infractions_from_audit(guild.id)
+
+        # for safety, fetch only entries that were created in past 5 minutes
+        entries = await guild.audit_logs(
+            action=discord.AuditLogAction.ban,
+            after=now - timedelta(minutes=5),
+            oldest_first=False,
+            limit=1,
+        ).flatten()
+
+        if not entries:
+            return
+        entry = entries[0]
+
+        if entry.target.id != user.id:
+            raise Exception("Fetched audit entry is not about the banned user.")
+
+        await self.bot.infractions.create(
+            inf_type=InfractionType.PERMABAN,
+            expires_at=None,
+            guild_id=guild.id,
+            mod_id=entry.user.id,
+            target_id=entry.target.id,
+            reason=entry.reason or "Manual ban with no reason.",
+            create_action=False,
+        )
+
+    @commands.Cog.listener()
+    async def on_member_unban(self, guild: discord.Guild, user: discord.User):
+        now = helpers.utcnow()
+        settings = await self.bot.cache.get_settings(guild.id)
+
+        if not settings.audit_infractions:
+            return
+
+        if not guild.me.guild_permissions.view_audit_log:
+            return await self._disable_infractions_from_audit(guild.id)
+
+        entries = await guild.audit_logs(
+            after=now - timedelta(minutes=5),
+            action=discord.AuditLogAction.unban,
+            oldest_first=False,
+            limit=1,
+        ).flatten()
+
+        if not entries:
+            return
+        entry = entries[0]
+
+        if entry.target.id != user.id:
+            raise Exception("Fetched audit entry is not about the unbanned user.")
+
+        await self.bot.infractions.create(
+            inf_type=InfractionType.UNBAN,
+            expires_at=None,
+            guild_id=guild.id,
+            mod_id=entry.user.id,
+            target_id=entry.target.id,
+            reason="Manual unban.",
+            create_action=False,
+        )
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: discord.Member):
+        settings = await self.bot.cache.get_settings(member.guild.id)
+        if settings.audit_infractions:
+            self.bot.dispatch("audit_member_leave", member=member)
+
+    @commands.Cog.listener()
+    async def on_audit_member_leave(self, member: discord.Member):
+        if not member.guild.me.guild_permissions.view_audit_log:
+            return await self._disable_infractions_from_audit(member.guild.id)
+
+        now = helpers.utcnow()
+        entries = await member.guild.audit_logs(
+            after=now - timedelta(minutes=5),
+            action=discord.AuditLogAction.kick,
+            oldest_first=False,
+            limit=1,
+        ).flatten()
+
+        if not entries:
+            return
+        entry = entries[0]
+
+        if entry.target.id != member.id:
+            raise Exception("Fetched audit entry is not about the kicked user.")
+
+        await self.bot.infractions.create(
+            inf_type=InfractionType.KICK,
+            expires_at=None,
+            guild_id=member.guild.id,
+            mod_id=entry.user.id,
+            target_id=entry.target.id,
+            reason=entry.reason or "Manual kick.",
+            create_action=False,
+        )
 
 
 def setup(bot):
