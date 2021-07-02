@@ -34,7 +34,7 @@ def is_manager():
 
 def is_mod():
     async def predicate(ctx: TomodachiContext):
-        settings = await ctx.bot.cache.get_settings(ctx.guild.id)
+        settings = await ctx.bot.cache.settings.get(ctx.guild.id)
         author_roles = [r.id for r in ctx.author.roles]
 
         return any(r_id in author_roles for r_id in settings.mod_roles)

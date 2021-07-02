@@ -74,20 +74,18 @@ class Tomodachi(commands.AutoShardedBot):
             await self.session.close()
 
         await self.db.disconnect()
-        await self.cache.redis.flushdb(True)
-        await self.cache.redis.close()
-
+        await self.cache.close()
         await super().close()
 
     async def get_prefix(self, message: discord.Message):
         await self.db.wait_until_connected()
 
-        async with self.cache.settings(message.guild.id) as settings:
-            prefix = settings.prefix or config.DEFAULT_PREFIX
+        settings = await self.cache.settings.get(message.guild.id)
+        prefix = settings.prefix or config.DEFAULT_PREFIX
         return [f"<@!{self.user.id}> ", f"<@{self.user.id}> ", prefix]
 
     async def update_prefix(self, guild_id: int, new_prefix: str):
-        async with self.cache.fresh_cache(guild_id):
+        async with self.cache.settings.fresh(guild_id):
             prefix = await self.db.update_prefix(guild_id, new_prefix)
         return prefix
 
