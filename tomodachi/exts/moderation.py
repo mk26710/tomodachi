@@ -83,6 +83,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
                 await self.bot.infractions.create(
                     inf_type=InfractionType.UNBAN,
                     guild_id=guild.id,
+                    mod_id=self.bot.user.id,
                     target_id=obj.id,
                     expires_at=None,
                     reason=reason,
