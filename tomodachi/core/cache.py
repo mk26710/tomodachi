@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 from contextlib import asynccontextmanager
 
 import orjson
@@ -19,20 +19,24 @@ if TYPE_CHECKING:
     from tomodachi.core.bot import Tomodachi
 
 
-class Cache:
-    def __init__(self, bot: Tomodachi) -> None:
-        self.bot = bot
-        self.redis = aioredis.from_url(bot.config.REDIS_URI, decode_responses=True)
+class CacheProto(Protocol):
+    bot: Tomodachi
+    redis: aioredis.Redis
+
+
+class CachedSettings:
+    def __init__(self, parent: CacheProto) -> None:
+        self._parent = parent
 
     @asynccontextmanager
-    async def fresh_cache(self, guild_id: int):
+    async def fresh(self, guild_id: int):
         try:
             yield None
         finally:
-            await self.refresh_settings(guild_id)
+            await self.refresh(guild_id)
 
-    async def refresh_settings(self, guild_id: int):
-        async with self.bot.db.pool.acquire() as conn:
+    async def refresh(self, guild_id: int):
+        async with self._parent.bot.db.pool.acquire() as conn:
             query = """select
                 g.guild_id,
                 g.prefix,
@@ -49,20 +53,30 @@ class Cache:
         if not record:
             raise CacheFail(f"{guild_id} doesn't exist in the mod_settings table.")
 
-        await self.redis.set(f"MS-{guild_id}", orjson.dumps(dict(record)))
+        await self._parent.redis.set(f"MS-{guild_id}", orjson.dumps(dict(record)))
 
-    @asynccontextmanager
-    async def settings(self, guild_id: int):
-        settings = await self.get_settings(guild_id)
-        yield settings
-
-    async def get_settings(self, guild_id: int, *, refresh: bool = True):
-        data = await self.redis.get(f"MS-{guild_id}")
+    async def get(self, guild_id: int, *, refresh: bool = True):
+        data = await self._parent.redis.get(f"MS-{guild_id}")
         if not data:
             if not refresh:
                 raise CacheMiss(f"There's no cached mod_settings for {guild_id}")
 
-            await self.refresh_settings(guild_id)
-            data = await self.redis.get(f"MS-{guild_id}")
+            await self.refresh(guild_id)
+            data = await self._parent.redis.get(f"MS-{guild_id}")
 
         return Settings(**orjson.loads(data))
+
+
+class Cache(CacheProto):
+    def __init__(self, bot: Tomodachi) -> None:
+        self.bot = bot
+        self.redis = aioredis.from_url(bot.config.REDIS_URI, decode_responses=True)
+        self.settings = CachedSettings(self)
+
+    async def refresh_by_guild(self, guild_id: int):
+        await self.settings.refresh(guild_id)
+
+    async def close(self):
+        self.settings = None
+        await self.cache.redis.flushdb(True)
+        await self.redis.close()
