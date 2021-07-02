@@ -100,6 +100,38 @@ class Events(CogMixin):
             create_action=False,
         )
 
+    @commands.Cog.listener()
+    async def on_member_unban(self, guild: discord.Guild, user: discord.User):
+        now = helpers.utcnow()
+        settings = await self.bot.cache.get_settings(guild.id)
+
+        if not settings.audit_infractions:
+            return await self._disable_infractions_from_audit(guild.id)
+
+        entries = await guild.audit_logs(
+            after=now - timedelta(minutes=5),
+            action=discord.AuditLogAction.unban,
+            oldest_first=False,
+            limit=1,
+        ).flatten()
+
+        if not entries:
+            return
+        entry = entries[0]
+
+        if entry.target.id != user.id:
+            raise Exception("Fetched audit entry is not about the unbanned user.")
+
+        await self.bot.infractions.create(
+            inf_type=InfractionType.UNBAN,
+            expires_at=None,
+            guild_id=guild.id,
+            mod_id=entry.user.id,
+            target_id=entry.target.id,
+            reason="Manual unban.",
+            create_action=False,
+        )
+
 
 def setup(bot):
     bot.add_cog(Events(bot))
