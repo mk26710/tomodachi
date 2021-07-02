@@ -7,7 +7,6 @@
 from typing import Union
 
 import discord
-from discord.enums import AuditLogAction
 from discord.ext import commands
 from datetime import timedelta
 
@@ -77,7 +76,12 @@ class Events(CogMixin):
             return await self._disable_infractions_from_audit(guild.id)
 
         # for safety, fetch only entries that were created in past 5 minutes
-        entries = await guild.audit_logs(action=AuditLogAction.ban, after=now - timedelta(minutes=5), limit=1).flatten()
+        entries = await guild.audit_logs(
+            action=discord.AuditLogAction.ban,
+            after=now - timedelta(minutes=5),
+            limit=1,
+        ).flatten()
+
         if not entries:
             return
         entry = entries[0]
