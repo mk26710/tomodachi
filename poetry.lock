@@ -180,8 +180,26 @@ reference = "master"
 resolved_reference = "309c70222eec33acacb8c21bbb0fbe9bc57de661"
 
 [[package]]
+name = "discord-ext-menus-views"
+version = "0.1.0"
+description = "A discord.ext.menus Menu backed by Views and Buttons instead of reactions."
+category = "main"
+optional = false
+python-versions = "^3.8"
+develop = false
+
+[package.dependencies]
+"discord.py" = "branch master"
+
+[package.source]
+type = "git"
+url = "https://github.com/oliver-ni/discord-ext-menus-views"
+reference = "master"
+resolved_reference = "58c5ed651c11aa7d2e2715848c3a3cb218492412"
+
+[[package]]
 name = "discord.py"
-version = "2.0.0a3328+g30605e6f"
+version = "2.0.0a3333+g69c400d8"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -199,7 +217,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "30605e6f4ff7e8ed0627efacd1fc829dbe36298e"
+resolved_reference = "69c400d81338bf3df54b78f3a50ac1ec5d6c9729"
 
 [[package]]
 name = "fastapi"
@@ -632,7 +650,7 @@ speed = ["uvloop"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "4e9b41765cdd742be8acbb97ca8344048131ab4df9e156f3087bc2611d783bdd"
+content-hash = "147e19b841bc107d0e5a8af915ed8d8c86c48d4090cfeee38b71fe1fcb5d0f71"
 
 [metadata.files]
 aiohttp = [
@@ -735,6 +753,7 @@ databases = [
     {file = "databases-0.4.3.tar.gz", hash = "sha256:1521db7f6d3c581ff81b3552e130b27a13aefea2a57295e65738081831137afc"},
 ]
 discord-ext-menus = []
+discord-ext-menus-views = []
 "discord.py" = []
 fastapi = [
     {file = "fastapi-0.63.0-py3-none-any.whl", hash = "sha256:98d8ea9591d8512fdadf255d2a8fa56515cdd8624dca4af369da73727409508e"},
