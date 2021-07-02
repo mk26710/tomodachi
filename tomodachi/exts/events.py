@@ -18,6 +18,12 @@ from tomodachi.core.actions import Action
 
 
 class Events(CogMixin):
+    async def _disable_infractions_from_audit(self, guild_id: int):
+        async with self.bot.cache.fresh_cache(guild_id):
+            async with self.bot.db.pool.acquire() as conn:
+                query = "update mod_settings set audit_infractions=false where guild_id=$1;"
+                await conn.execute(query, guild_id)
+
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         await self.bot.db.store_guild(guild.id)
@@ -68,11 +74,7 @@ class Events(CogMixin):
         # If bot doesn't have permissions to read audit logs
         # better to disable infractions from manual actions
         if not guild.me.guild_permissions.view_audit_log:
-            async with self.bot.cache.fresh_cache(guild.id):
-                async with self.bot.db.pool.acquire() as conn:
-                    query = "update mod_settings set audit_infractions=false where guild_id=$1;"
-                    await conn.execute(query, guild.id)
-            return
+            return await self._disable_infractions_from_audit(guild.id)
 
         # for safety, fetch only entries that were created in past 5 minutes
         entries = await guild.audit_logs(action=AuditLogAction.ban, after=now - timedelta(minutes=5), limit=1).flatten()
