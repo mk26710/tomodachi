@@ -135,6 +135,42 @@ class Events(CogMixin):
             create_action=False,
         )
 
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: discord.Member):
+        settings = await self.bot.cache.get_settings(member.guild.id)
+        if settings.audit_infractions:
+            self.bot.dispatch("audit_member_leave", member=member)
+
+    @commands.Cog.listener()
+    async def on_audit_member_leave(self, member: discord.Member):
+        if not member.guild.me.guild_permissions.view_audit_log:
+            return await self._disable_infractions_from_audit(member.guild.id)
+
+        now = helpers.utcnow()
+        entries = await member.guild.audit_logs(
+            after=now - timedelta(minutes=5),
+            action=discord.AuditLogAction.kick,
+            oldest_first=False,
+            limit=1,
+        ).flatten()
+
+        if not entries:
+            return
+        entry = entries[0]
+
+        if entry.target.id != member.id:
+            raise Exception("Fetched audit entry is not about the kicked user.")
+
+        await self.bot.infractions.create(
+            inf_type=InfractionType.KICK,
+            expires_at=None,
+            guild_id=member.guild.id,
+            mod_id=entry.user.id,
+            target_id=entry.target.id,
+            reason=entry.reason or "Manual kick.",
+            create_action=False,
+        )
+
 
 def setup(bot):
     bot.add_cog(Events(bot))
