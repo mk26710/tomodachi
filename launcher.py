@@ -8,10 +8,11 @@ import asyncio
 import logging
 import os.path
 
+import ujson
 import aiohttp
+import discord
 
 import config
-import patches  # noqa
 from tomodachi.core.bot import Tomodachi
 from tomodachi.utils.database import db
 
@@ -46,6 +47,13 @@ async def main():
         finally:
             await tomodachi.close()
 
+
+# patch d.py with ujson
+def to_json(obj):
+    return ujson.dumps(obj, ensure_ascii=True)
+
+
+discord.utils.to_json = to_json
 
 try:
     import uvloop
