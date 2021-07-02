@@ -106,6 +106,9 @@ class Events(CogMixin):
         settings = await self.bot.cache.get_settings(guild.id)
 
         if not settings.audit_infractions:
+            return
+
+        if not guild.me.guild_permissions.view_audit_log:
             return await self._disable_infractions_from_audit(guild.id)
 
         entries = await guild.audit_logs(
