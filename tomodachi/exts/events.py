@@ -91,7 +91,7 @@ class Events(CogMixin):
             guild_id=guild.id,
             mod_id=entry.user.id,
             target_id=entry.target.id,
-            reason=entry.reason,
+            reason=entry.reason or "Manual ban with no reason.",
             create_action=False,
         )
 
