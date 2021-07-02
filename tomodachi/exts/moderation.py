@@ -27,7 +27,7 @@ MemberUser = Union[discord.Member, discord.User]
 
 class MySource(menus.ListPageSource):
     def __init__(self, data: List[Infraction]):
-        super().__init__(data, per_page=4)
+        super().__init__(data, per_page=10)
         self.header = f"{'ID': <6} | {'Type': <10} | {'Intruder ID': <18} | {'Moderator ID': <18} | {'Timestamp (UTC)': <20} | Reason"
         self.border = f"{'-'*7}|{'-'*12}|{'-'*20}|{'-'*20}|{'-'*22}|{'-'*10}"
 
