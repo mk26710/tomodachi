@@ -6,22 +6,18 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 from contextlib import asynccontextmanager
 
 import orjson
 import aioredis
 
+from tomodachi.core.abc import CacheProto
 from tomodachi.core.models import Settings
 from tomodachi.core.exceptions import CacheFail, CacheMiss
 
 if TYPE_CHECKING:
     from tomodachi.core.bot import Tomodachi
-
-
-class CacheProto(Protocol):
-    bot: Tomodachi
-    redis: aioredis.Redis
 
 
 class CachedSettings:
