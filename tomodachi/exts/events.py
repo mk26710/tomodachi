@@ -79,6 +79,7 @@ class Events(CogMixin):
         entries = await guild.audit_logs(
             action=discord.AuditLogAction.ban,
             after=now - timedelta(minutes=5),
+            oldest_first=False,
             limit=1,
         ).flatten()
 
