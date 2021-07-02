@@ -4,12 +4,16 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from typing import Union
+
 import discord
+from discord.enums import AuditLogAction
 from discord.ext import commands
+from datetime import timedelta
 
 from tomodachi.core import CogMixin
 from tomodachi.utils import helpers, timestamp
-from tomodachi.core.enums import ActionType
+from tomodachi.core.enums import ActionType, InfractionType
 from tomodachi.core.actions import Action
 
 
@@ -52,6 +56,42 @@ class Events(CogMixin):
             )
         except (discord.Forbidden, discord.HTTPException):
             pass
+
+    @commands.Cog.listener()
+    async def on_member_ban(self, guild: discord.Guild, user: Union[discord.User, discord.Member]):
+        now = helpers.utcnow()
+        settings = await self.bot.cache.get_settings(guild.id)
+
+        if not settings.audit_infractions:
+            return
+
+        # If bot doesn't have permissions to read audit logs
+        # better to disable infractions from manual actions
+        if not guild.me.guild_permissions.view_audit_log:
+            async with self.bot.cache.fresh_cache(guild.id):
+                async with self.bot.db.pool.acquire() as conn:
+                    query = "update mod_settings set audit_infractions=false where guild_id=$1;"
+                    await conn.execute(query, guild.id)
+            return
+
+        # for safety, fetch only entries that were created in past 5 minutes
+        entries = await guild.audit_logs(action=AuditLogAction.ban, after=now - timedelta(minutes=5), limit=1).flatten()
+        if not entries:
+            return
+        entry = entries[0]
+
+        if entry.target.id != user.id:
+            raise Exception("Fetched audit entry is not about the banned user.")
+
+        await self.bot.infractions.create(
+            inf_type=InfractionType.PERMABAN,
+            expires_at=None,
+            guild_id=guild.id,
+            mod_id=entry.user.id,
+            target_id=entry.target.id,
+            reason=entry.reason,
+            create_action=False,
+        )
 
 
 def setup(bot):
