@@ -5,23 +5,42 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-from tomodachi.core.menus import TomodachiMenu
 
-from typing import TYPE_CHECKING, Union, Optional
+import textwrap
+from typing import TYPE_CHECKING, List, Union, Optional
 from datetime import datetime
 
 import discord
-from discord.ext import commands
+from discord.ext import menus, commands
 
 from tomodachi.core import CogMixin, TomodachiContext, checks
 from tomodachi.utils import i, helpers, timestamp
 from tomodachi.core.enums import InfractionType
+from tomodachi.core.menus import MyViewMenuPages
 from tomodachi.utils.converters import TimeUnit
 
 if TYPE_CHECKING:
     from tomodachi.core.infractions import Infraction
 
 MemberUser = Union[discord.Member, discord.User]
+
+
+class MySource(menus.ListPageSource):
+    def __init__(self, data: List[Infraction]):
+        super().__init__(data, per_page=4)
+        self.header = f"{'ID': <6} | {'Type': <10} | {'Intruder ID': <18} | {'Moderator ID': <18} | {'Timestamp (UTC)': <20} | Reason"
+        self.border = f"{'-'*7}|{'-'*12}|{'-'*20}|{'-'*20}|{'-'*22}|{'-'*10}"
+
+    def make_row(self, entry: Infraction):
+        human_timestamp = entry.created_at.strftime("%Y-%m-%d %H:%M:%S")
+        reason = textwrap.shorten(entry.reason, 47)
+        return f"{str(entry.id): <6} | {entry.inf_type.name: <10} | {str(entry.target_id): <18} | {str(entry.mod_id): <18} | {human_timestamp: <20} | {reason}"
+
+    async def format_page(self, menu: menus.MenuPages, entries: List[Infraction]):
+        rows = [self.make_row(entry) for entry in entries]
+        table = "```\n{0}\n```".format("\n".join([self.header, self.border, *rows]))
+        page = f"Page {menu.current_page+1}/{self.get_max_pages()}"
+        return f"{table}{page}"
 
 
 class InfractionSearchFlags(commands.FlagConverter, prefix="--", delimiter=""):
@@ -178,7 +197,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         if not ctx.subcommand_passed:
             await ctx.send_help("infractions")
 
-    @infractions.command(name="search", enabled=False)  # todo: make the response look then enable
+    @infractions.command(name="search")
     async def infractions_search(self, ctx: TomodachiContext, *, flags: InfractionSearchFlags):
         """Searches through infractions history.
 
@@ -206,8 +225,8 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         if not inf_ls:
             return await ctx.send(":x: Nothing was found!")
 
-        entries = [f"{inf}" for inf in inf_ls]
-        menu = TomodachiMenu(entries, title="Infractions")
+        src = MySource(inf_ls)
+        menu = MyViewMenuPages(src, clear_reactions_after=True)
         await menu.start(ctx)
 
 
