@@ -24,7 +24,7 @@ class Management(CogMixin, icon=discord.PartialEmoji.from_str("🛠️")):
 
     @config.command(help="Changes prefix of a bot in this server")
     async def prefix(self, ctx: TomodachiContext, new_prefix: str = None):
-        settings = await ctx.get_settings()
+        settings = await ctx.settings()
 
         if not new_prefix:
             current_prefix = settings.prefix or self.bot.config.DEFAULT_PREFIX
@@ -36,7 +36,7 @@ class Management(CogMixin, icon=discord.PartialEmoji.from_str("🛠️")):
     @config.group()
     async def mod_roles(self, ctx: TomodachiContext):
         if not ctx.invoked_subcommand:
-            settings = await ctx.get_settings()
+            settings = await ctx.settings()
             roles = [ctx.guild.get_role(r_id) or discord.Object(id=r_id) for r_id in settings.mod_roles]
 
             embed = discord.Embed()
@@ -48,13 +48,13 @@ class Management(CogMixin, icon=discord.PartialEmoji.from_str("🛠️")):
 
     @mod_roles.command(name="add")
     async def mod_roles_add(self, ctx: TomodachiContext, roles: commands.Greedy[discord.Role]):
-        settings = await ctx.get_settings()
+        settings = await ctx.settings()
 
         to_add = [r for r in set(roles) if r.id not in settings.mod_roles]
         if not to_add:
             return await ctx.send(":x: Nothing changed. Make sure that provided roles aren't Mod Roles already!")
 
-        async with ctx.fresh_cache():
+        async with self.bot.cache.settings.fresh(ctx.guild.id):
             async with self.bot.db.pool.acquire() as conn:
                 query = """insert into mod_settings as ms (guild_id, mod_roles) values ($1, $2)
                     on conflict (guild_id) do update set mod_roles = ms.mod_roles || $2::bigint[]
@@ -72,14 +72,14 @@ class Management(CogMixin, icon=discord.PartialEmoji.from_str("🛠️")):
 
     @mod_roles.command(name="remove", aliases=["rmv", "delete", "del"])
     async def mod_roles_remove(self, ctx: TomodachiContext, roles: commands.Greedy[discord.Role]):
-        settings = await ctx.get_settings()
+        settings = await ctx.settings()
 
         to_delete = [r for r in set(roles) if r.id in settings.mod_roles]
         await ctx.send(f"{to_delete=}")
         if not to_delete:
             return await ctx.send(":x: Provided roles are not Mod Roles.")
 
-        async with ctx.fresh_cache():
+        async with self.bot.cache.settings.fresh(ctx.guild.id):
             async with self.bot.db.pool.acquire() as conn:
                 query = """update mod_settings as ms
                     set mod_roles = (select array(select unnest(ms.mod_roles) except select unnest($2::bigint[])))
