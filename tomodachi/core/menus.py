@@ -173,10 +173,10 @@ class MyViewMenuPages(ViewMenuPages):
     def __init__(self, source, **kwargs):
         super().__init__(source, **kwargs)
         self._emoji_to_text = {
-            "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE}\ufe0f": "First page",
+            "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f": "First page",
             "\N{BLACK LEFT-POINTING TRIANGLE}\ufe0f": "Previous page",
             "\N{BLACK RIGHT-POINTING TRIANGLE}\ufe0f": "Next page",
-            "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE}\ufe0f": "Last page",
+            "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f": "Last page",
             "\N{BLACK SQUARE FOR STOP}\ufe0f": "Stop",
         }
 
