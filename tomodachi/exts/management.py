@@ -75,7 +75,6 @@ class Management(CogMixin, icon=discord.PartialEmoji.from_str("🛠️")):
         settings = await ctx.settings()
 
         to_delete = [r for r in set(roles) if r.id in settings.mod_roles]
-        await ctx.send(f"{to_delete=}")
         if not to_delete:
             return await ctx.send(":x: Provided roles are not Mod Roles.")
 
