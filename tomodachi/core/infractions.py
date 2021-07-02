@@ -61,7 +61,7 @@ class Infractions:
             records = await conn.fetch(query, guild_id, inf_id, target_id, mod_id)
 
         if not records:
-            return None
+            return []
 
         return [Infraction(**record) for record in records]
 
