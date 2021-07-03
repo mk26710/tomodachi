@@ -30,15 +30,6 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         super().__init__(**options, command_attrs=dict(hidden=True))
         self._e_colour = 0x2F3136
 
-    async def cleanup_view(self, msg):
-        timed_out = await self.view.wait()
-
-        with suppress(discord.HTTPException, discord.NotFound):
-            if not timed_out:
-                await msg.delete()
-            else:
-                await msg.edit(view=None)
-
     async def send_pages(self):
         e = discord.Embed(colour=self._e_colour)
         e.description = "".join(self.paginator.pages)
