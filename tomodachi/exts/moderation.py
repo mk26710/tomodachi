@@ -174,7 +174,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
     @commands.command()
     async def unban(self, ctx: TomodachiContext, target: BannedUser, *, reason: str = None):
         reason = reason or "No reason."
-        await ctx.guild.unban(target, reason=self.make_audit_reason(ctx.author, reason))
+        await ctx.guild.unban(target, reason=self.make_audit_reason(f"{ctx.author} ({ctx.author.id})", reason))
 
         inf = await self.bot.infractions.create(
             inf_type=InfractionType.UNBAN,
