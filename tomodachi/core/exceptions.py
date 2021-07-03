@@ -6,7 +6,13 @@
 
 from discord.ext.commands import CommandError
 
-__all__ = ["AniListException"]
+__all__ = [
+    "AniListException",
+    "Blacklisted",
+    "AlreadyBlacklisted",
+    "CacheMiss",
+    "CacheFail",
+]
 
 
 class Blacklisted(CommandError):
