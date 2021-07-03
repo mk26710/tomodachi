@@ -12,14 +12,34 @@ from typing import List, Union
 
 import discord
 from discord.ext import commands
+from more_itertools import chunked
 
 from tomodachi.core import CogMixin, TomodachiContext
+from tomodachi.core.menus import TomodachiMenu
 from tomodachi.utils.icons import i
 
 # Type alias for a commands mapping, quite helpful
 Commands = List[Union[commands.Command, commands.Group]]
 
 PREFIX_PLACEHOLDER = re.compile(r"%prefix%", re.MULTILINE)
+
+
+class BotHelpMenu(TomodachiMenu):
+    def __init__(self, entries, *, note: str, title: str, thumbnail: str = None):
+        super().__init__(entries, title=title)
+        self.note = note
+        self.entries = entries
+        self.embed.description = note
+        self.embed.colour = 0x2F3136
+        self.embed.set_thumbnail(url=thumbnail)
+
+    async def format_embed(self, payload: list[dict[str, list[Union[commands.Command, commands.Group]]]]):
+        self.embed.clear_fields()
+        if self.max_index > 0:
+            self.embed.set_footer(text=f"Page {self.current_index + 1} / {self.max_index + 1}")
+        for group in payload:
+            for category, _commands in group.items():
+                self.embed.add_field(name=category, value=" ".join(f"`{c.qualified_name}`" for c in _commands))
 
 
 class TomodachiHelpCommand(commands.MinimalHelpCommand):
@@ -40,35 +60,25 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         return fmt.format(self.context.prefix, command.qualified_name, command.short_doc)
 
     async def send_bot_help(self, _):
-        embed = discord.Embed(
-            colour=self._e_colour,
-            description=self.get_opening_note(),
-        )
-
-        embed.set_thumbnail(url=self.context.bot.user.avatar.url)
-
         def get_category(command):
             _cog: CogMixin = command.cog
             return _cog.formatted_name if _cog is not None else "Uncategorized"
 
         filtered: Commands = await self.filter_commands(self.context.bot.commands, sort=True, key=get_category)
 
-        igrouped = itertools.groupby(filtered, key=get_category)
-        # cast iterators to tuples because we need to reuse values of it
-        grouped = tuple((cat, tuple(cmds)) for cat, cmds in igrouped)
+        grouped = itertools.groupby(filtered, key=get_category)
+        iterated = tuple((cat, tuple(cmds)) for cat, cmds in grouped)
+        ordered = sorted(iterated, key=lambda x: len("".join(cmd.name for cmd in x[1])), reverse=True)
+        chunks = list(chunked(list({cat: list(cmds)} for cat, cmds in ordered), 6))
 
-        def get_total_length(group):
-            return len("".join(cmd.name for cmd in group[1]))
+        menu = BotHelpMenu(
+            chunks,
+            note=self.get_opening_note(),
+            title="Available Commands",
+            thumbnail=self.context.bot.user.avatar.url,
+        )
 
-        # order group categories by the total length of command names
-        ordered = sorted(grouped, key=get_total_length, reverse=True)
-
-        for category, _commands in ordered:
-            _commands = sorted(_commands, key=lambda c: c.name)
-            embed.add_field(name=category, value=" ".join(f"`{c.qualified_name}`" for c in _commands), inline=False)
-
-        channel = self.get_destination()
-        await channel.send(embed=embed)
+        await menu.start(self.context, channel=self.get_destination())
 
     async def send_cog_help(self, cog: CogMixin):
         description = ""
