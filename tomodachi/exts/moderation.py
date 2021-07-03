@@ -11,13 +11,13 @@ from typing import TYPE_CHECKING, List, Union, Optional
 from datetime import datetime
 
 import discord
+from discord.embeds import EmptyEmbed
 from discord.ext import menus, commands
 
 from tomodachi.core import CogMixin, TomodachiContext, checks
 from tomodachi.utils import i, helpers, timestamp
 from tomodachi.core.enums import InfractionType
-from tomodachi.core.menus import MyViewMenuPages
-from tomodachi.utils.converters import TimeUnit
+from tomodachi.utils.converters import TimeUnit, uint
 
 if TYPE_CHECKING:
     from tomodachi.core.infractions import Infraction
@@ -197,6 +197,48 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         """Group of commands to manage infractions"""
         if not ctx.subcommand_passed:
             await ctx.send_help("infractions")
+
+    @infractions.command(name="info")
+    @commands.cooldown(1, 5.0, commands.BucketType.guild)
+    async def infractions_info(self, ctx: TomodachiContext, infraction_id: uint):
+        """Provides full information on some specific infraction."""
+        data = await self.bot.infractions.get(ctx.guild.id, inf_id=infraction_id)
+        if not data:
+            return await ctx.send(":x: Nothing was found for this query.")
+        inf = data[0]
+
+        target = await self.bot.get_or_fetch_user(inf.target_id)
+        moderator = await self.bot.get_or_fetch_user(inf.mod_id)
+
+        embed = discord.Embed(colour=discord.Colour.blurple())
+        embed.set_thumbnail(url=getattr(target.avatar, "url", EmptyEmbed))
+        embed.set_footer(text=f"#{inf.id}")
+        embed.add_field(name="Reason", value=textwrap.shorten(inf.reason, width=1000), inline=False)
+
+        title = helpers.infraction_by_formats.get(inf.inf_type).format(moderator.name, target.name)
+        icon_url = getattr(moderator.avatar, "url", EmptyEmbed)
+        embed.set_author(name=title, icon_url=icon_url)
+
+        embed.add_field(name="Moderator", value=f"{moderator}", inline=False)
+        embed.add_field(name="Moderator ID", value=f"{moderator.id}", inline=False)
+
+        embed.add_field(name="Intruder", value=f"{target}", inline=False)
+        embed.add_field(name="Intruder ID", value=f"{target.id}", inline=False)
+
+        if inf.created_at:
+            when_created = timestamp(inf.created_at)
+            embed.add_field(name="Creation date", value=f"{when_created:F}", inline=False)
+
+        if inf.expires_at:
+            when_expires = timestamp(inf.expires_at)
+            embed.add_field(name="Expire date", value=f"{when_expires:F}", inline=False)
+
+        if inf.action_id and inf.expires_at:
+            embed.add_field(name="Active", value="Yes", inline=False)
+        elif not inf.action_id and inf.expires_at:
+            embed.add_field(name="Active", value="No", inline=False)
+
+        await ctx.send(embed=embed)
 
     @infractions.command(name="search")
     async def infractions_search(self, ctx: TomodachiContext, *, flags: InfractionSearchFlags):
