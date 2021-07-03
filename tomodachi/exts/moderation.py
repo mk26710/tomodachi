@@ -17,7 +17,7 @@ from discord.ext import menus, commands
 from tomodachi.core import CogMixin, TomodachiContext, checks
 from tomodachi.utils import i, helpers, timestamp
 from tomodachi.core.enums import InfractionType
-from tomodachi.utils.converters import TimeUnit, uint
+from tomodachi.utils.converters import BannedUser, TimeUnit, uint
 
 if TYPE_CHECKING:
     from tomodachi.core.infractions import Infraction
@@ -167,6 +167,24 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
         content = f":ok_hand: **{target}** (`{target.id}`) was kicked for: `{reason}` (`#{inf.id}`)"
 
         await ctx.send(content)
+
+    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.check_any(commands.has_guild_permissions(ban_members=True), checks.is_mod())
+    @commands.command()
+    async def unban(self, ctx: TomodachiContext, target: BannedUser, *, reason: str = None):
+        reason = reason or "No reason."
+        await ctx.guild.unban(target, reason=self.make_audit_reason(ctx.author, reason))
+
+        inf = await self.bot.infractions.create(
+            inf_type=InfractionType.UNBAN,
+            guild_id=ctx.guild.id,
+            mod_id=ctx.author.id,
+            target_id=target.id,
+            reason=reason,
+            create_action=False,
+        )
+
+        await ctx.send(f":ok_hand: **{target}** (`{target.id}`) was unbanned for: `{reason}` (`#{inf.id}`)")
 
     # fmt: off
     @commands.bot_has_guild_permissions(manage_messages=True)
