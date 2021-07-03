@@ -4,6 +4,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from tomodachi.core.enums import InfractionType
 from typing import Tuple
 from datetime import datetime, timezone
 from collections import defaultdict
@@ -12,7 +13,25 @@ import discord
 
 from tomodachi.utils.icons import i
 
-__all__ = ["humanize_flags", "avatar_or_default", "make_intents", "make_progress_bar", "humanize_activity", "utcnow"]
+__all__ = [
+    "humanize_flags",
+    "avatar_or_default",
+    "make_intents",
+    "make_progress_bar",
+    "humanize_activity",
+    "utcnow",
+    "infraction_by_formats",
+]
+
+
+infraction_by_formats = {
+    InfractionType.WARN: "{0} warned {1}",
+    InfractionType.MUTE: "{0} muted {1}",
+    InfractionType.KICK: "{0} kicked {1}",
+    InfractionType.UNBAN: "{0} unbanned {1}",
+    InfractionType.TEMPBAN: "{0} temporarily banned {1}",
+    InfractionType.PERMABAN: "{0} permanently banned {1}",
+}
 
 
 def utcnow():
