@@ -28,7 +28,6 @@ urllib3 = "^1.26.4"
 uvicorn = "^0.13.4"
 uvloop = {version = "^0.15.2", optional = true}
 orjson = "^3.5.3"
-discord-ext-menus-views = {git = "https://github.com/oliver-ni/discord-ext-menus-views"}
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

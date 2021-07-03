@@ -227,7 +227,7 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
             return await ctx.send(":x: Nothing was found!")
 
         src = MySource(inf_ls)
-        menu = MyViewMenuPages(src, clear_reactions_after=True)
+        menu = menus.MenuPages(src, clear_reactions_after=True)
         await menu.start(ctx)
 
 
