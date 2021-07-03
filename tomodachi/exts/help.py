@@ -9,7 +9,6 @@ from __future__ import annotations
 import re
 import itertools
 from typing import List, Union
-from contextlib import suppress
 
 import discord
 from discord.ext import commands
