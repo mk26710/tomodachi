@@ -10,11 +10,9 @@ from datetime import timedelta
 import discord
 from discord.ext import commands
 
-from tomodachi.core.context import TomodachiContext
 
-
-class BannedUser(commands.Converter, discord.abc.User):
-    async def convert(self, ctx: TomodachiContext, argument: str):
+class BannedUser(commands.Converter, discord.User):
+    async def convert(self, ctx, argument: str):
         user = await commands.UserConverter().convert(ctx, argument)
         try:
             await ctx.guild.fetch_ban(user)
