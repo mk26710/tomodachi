@@ -7,7 +7,23 @@
 import re
 from datetime import timedelta
 
+import discord
+from discord.ext import commands
+from discord.errors import NotFound
 from discord.ext.commands import Converter, BadArgument
+from discord.ext.commands.converter import UserConverter
+
+from tomodachi.core.context import TomodachiContext
+
+
+class BannedUser(commands.Converter, discord.abc.User):
+    async def convert(self, ctx: TomodachiContext, argument: str):
+        user = await UserConverter().convert(ctx, argument)
+        try:
+            await ctx.guild.fetch_ban(user)
+        except NotFound:
+            raise commands.BadArgument(f":x: {user} is not banned.")
+        return user
 
 
 class uint(Converter, int):  # noqa
