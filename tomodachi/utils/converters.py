@@ -15,7 +15,7 @@ from tomodachi.core.context import TomodachiContext
 
 class BannedUser(commands.Converter, discord.abc.User):
     async def convert(self, ctx: TomodachiContext, argument: str):
-        user = await discord.UserConverter().convert(ctx, argument)
+        user = await commands.UserConverter().convert(ctx, argument)
         try:
             await ctx.guild.fetch_ban(user)
         except discord.NotFound:
