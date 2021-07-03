@@ -9,27 +9,24 @@ from datetime import timedelta
 
 import discord
 from discord.ext import commands
-from discord.errors import NotFound
-from discord.ext.commands import Converter, BadArgument
-from discord.ext.commands.converter import UserConverter
 
 from tomodachi.core.context import TomodachiContext
 
 
 class BannedUser(commands.Converter, discord.abc.User):
     async def convert(self, ctx: TomodachiContext, argument: str):
-        user = await UserConverter().convert(ctx, argument)
+        user = await discord.UserConverter().convert(ctx, argument)
         try:
             await ctx.guild.fetch_ban(user)
-        except NotFound:
+        except discord.NotFound:
             raise commands.BadArgument(f":x: {user} is not banned.")
         return user
 
 
-class uint(Converter, int):  # noqa
+class uint(commands.Converter, int):  # noqa
     async def convert(self, ctx, argument):
         if not argument.isdigit():
-            raise BadArgument(f"{argument} must be an unsigned integer")
+            raise commands.BadArgument(f"{argument} must be an unsigned integer")
 
         return int(argument)
 
@@ -44,11 +41,11 @@ units_to_seconds = {
 }
 
 
-class TimeUnit(Converter, timedelta):
+class TimeUnit(commands.Converter, timedelta):
     async def convert(self, ctx, argument):
         matches = re.findall(time_regex, argument)
         if not matches:
-            raise BadArgument(f'"{argument}" is invalid time input.')
+            raise commands.BadArgument(f'"{argument}" is invalid time input.')
 
         seconds = sum(units_to_seconds.get(unit) * int(amount) for amount, unit in matches)
 
@@ -58,11 +55,11 @@ class TimeUnit(Converter, timedelta):
 entry_id_regex = re.compile(r"(#?)(\d{1,7})")
 
 
-class EntryID(Converter, int):
+class EntryID(commands.Converter, int):
     async def convert(self, ctx, argument):
         match = re.match(entry_id_regex, argument)
         if not match:
-            raise BadArgument(f'"{argument}" is invalid entry ID.')
+            raise commands.BadArgument(f'"{argument}" is invalid entry ID.')
 
         _, num = match.groups()
         return int(num)
