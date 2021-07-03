@@ -31,7 +31,8 @@ class MySource(menus.ListPageSource):
         self.header = f"{'ID': <6} | {'Type': <10} | {'Intruder ID': <18} | {'Moderator ID': <18} | {'Timestamp (UTC)': <20} | Reason"
         self.border = f"{'-'*7}|{'-'*12}|{'-'*20}|{'-'*20}|{'-'*22}|{'-'*10}"
 
-    def make_row(self, entry: Infraction):
+    @staticmethod
+    def make_row(entry: Infraction):
         human_timestamp = entry.created_at.strftime("%Y-%m-%d %H:%M:%S")
         reason = textwrap.shorten(entry.reason, 47)
         return f"{str(entry.id): <6} | {entry.inf_type.name: <10} | {str(entry.target_id): <18} | {str(entry.mod_id): <18} | {human_timestamp: <20} | {reason}"
