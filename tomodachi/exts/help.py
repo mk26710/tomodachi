@@ -6,11 +6,9 @@
 
 from __future__ import annotations
 
-import asyncio
 import re
-import functools
 import itertools
-from typing import List, Union, Callable
+from typing import List, Union
 from contextlib import suppress
 
 import discord
@@ -25,27 +23,11 @@ Commands = List[Union[commands.Command, commands.Group]]
 PREFIX_PLACEHOLDER = re.compile(r"%prefix%", re.MULTILINE)
 
 
-class HelpView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=45.0)
-
-
-class HelpButton(discord.ui.Button):
-    def __init__(self, label: str, icon: discord.Emoji, callback: Callable, *, row=None):
-        super().__init__(style=discord.ButtonStyle.gray, label=label, emoji=icon, row=row)
-        self.__callback = callback
-
-    async def callback(self, interaction):
-        await self.__callback()
-        self.view.stop()
-
-
 class TomodachiHelpCommand(commands.MinimalHelpCommand):
     context: TomodachiContext
 
     def __init__(self, **options):
         super().__init__(**options, command_attrs=dict(hidden=True))
-        self.view = HelpView()
         self._e_colour = 0x2F3136
 
     async def cleanup_view(self, msg):
@@ -68,11 +50,6 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         return fmt.format(self.context.prefix, command.qualified_name, command.short_doc)
 
     async def send_bot_help(self, _):
-        async def interaction_check(interaction: discord.Interaction):
-            return interaction.user.id == self.context.author.id
-
-        self.view.interaction_check = interaction_check
-
         embed = discord.Embed(
             colour=self._e_colour,
             description=self.get_opening_note(),
@@ -86,12 +63,6 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
 
         filtered: Commands = await self.filter_commands(self.context.bot.commands, sort=True, key=get_category)
 
-        # create help buttons
-        for n, cog in enumerate({c.cog for c in filtered}):
-            callback = functools.partial(self.context.send_help, cog.qualified_name)
-            btn = HelpButton(cog.qualified_name, cog.icon, callback, row=n // 4)
-            self.view.add_item(btn)
-
         igrouped = itertools.groupby(filtered, key=get_category)
         # cast iterators to tuples because we need to reuse values of it
         grouped = tuple((cat, tuple(cmds)) for cat, cmds in igrouped)
@@ -104,11 +75,10 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
 
         for category, _commands in ordered:
             _commands = sorted(_commands, key=lambda c: c.name)
-            embed.add_field(name=category, value=" ".join(f"`{c.qualified_name}`" for c in _commands), inline=True)
+            embed.add_field(name=category, value=" ".join(f"`{c.qualified_name}`" for c in _commands), inline=False)
 
         channel = self.get_destination()
-        msg = await channel.send(embed=embed, view=self.view)
-        asyncio.create_task(self.cleanup_view(msg))
+        await channel.send(embed=embed)
 
     async def send_cog_help(self, cog: CogMixin):
         description = ""
