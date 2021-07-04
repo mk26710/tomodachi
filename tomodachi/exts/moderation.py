@@ -93,10 +93,11 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
             except (discord.Forbidden, discord.HTTPException):
                 return  # todo: once modlogs are created, log this to inform mods about failure
 
+    @commands.command(aliases=["permaban"])
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.check_any(commands.has_guild_permissions(ban_members=True), checks.is_mod())
-    @commands.command(aliases=["permaban"], help="Permanently bans a user from the server")
     async def ban(self, ctx: TomodachiContext, target: MemberUser, *, reason: str = None):
+        """Permanently bans a user from the server"""
         reason = reason or "No reason."
 
         try:
@@ -117,10 +118,11 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
 
         await ctx.send(content)
 
+    @commands.command()
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.check_any(commands.has_guild_permissions(ban_members=True), checks.is_mod())
-    @commands.command(help="Bans a user for specified period time")
     async def tempban(self, ctx: TomodachiContext, target: MemberUser, duration: TimeUnit, *, reason: str = None):
+        """Bans a user for specified period of time"""
         reason = reason or "No reason."
 
         unban_at = helpers.utcnow() + duration
@@ -146,10 +148,11 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
 
         await ctx.send(content)
 
+    @commands.command()
     @commands.bot_has_guild_permissions(kick_members=True)
     @commands.check_any(commands.has_guild_permissions(kick_members=True), checks.is_mod())
-    @commands.command(help="Kicks a member from the server")
     async def kick(self, ctx: TomodachiContext, target: discord.Member, *, reason: str = None):
+        """Kicks a member from the server"""
         reason = reason or "No reason."
 
         try:
@@ -169,9 +172,9 @@ class Moderation(CogMixin, icon=discord.PartialEmoji(name="discord_certified_mod
 
         await ctx.send(content)
 
+    @commands.command()
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.check_any(commands.has_guild_permissions(ban_members=True), checks.is_mod())
-    @commands.command()
     async def unban(self, ctx: TomodachiContext, target: BannedUser, *, reason: str = None):
         """Removes a ban from specified user"""
         reason = reason or "No reason."
