@@ -6,10 +6,13 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 import discord
 from discord.ext import commands
 
 from tomodachi.core import checks
+from tomodachi.utils import i
 from tomodachi.core.cog import CogMixin
 from tomodachi.core.context import TomodachiContext
 
@@ -32,6 +35,34 @@ class Management(CogMixin, icon=discord.PartialEmoji.from_str("🛠️")):
 
         prefix = await self.bot.update_prefix(ctx.guild.id, new_prefix)
         await ctx.send(f"Updated prefix in the server to `{prefix}`")
+
+    @config.command(aliases=["dm_targets", "dm_intruders"])
+    async def dm_on_mod_actions(self, ctx: TomodachiContext, mode: Optional[bool] = None):
+        """Enable or disable DMs on moderation actions
+
+        If mode is not specified you'll see current setting value"""
+        settings = await ctx.settings()
+
+        if mode is None:
+            if settings.dm_targets is True:
+                msg = f"{i:roundedCheck} Users receive messages on moderation actions."
+            else:
+                msg = ":x: Users don't receive messages on moderation actions."
+            return await ctx.send(msg)
+
+        if mode is settings.dm_targets:
+            return await ctx.send(":warning: The mode you have provided is the same as current one.")
+
+        async with self.bot.cache.settings.fresh(ctx.guild.id):
+            async with self.bot.db.pool.acquire() as conn:
+                query = "update mod_settings set dm_targets=$2 where guild_id=$1 returning dm_targets;"
+                new_dm_targets = await conn.fetchval(query, ctx.guild.id, mode)
+
+        if new_dm_targets is True:
+            msg = f"{i:roundedCheck} Users will receive DMs on moderation actions."
+        else:
+            msg = ":x: Users will not receive DMs on moderation actions."
+        await ctx.send(msg)
 
     @config.group()
     async def mod_roles(self, ctx: TomodachiContext):
