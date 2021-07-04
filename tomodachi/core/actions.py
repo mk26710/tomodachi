@@ -1,9 +1,7 @@
-#  Copyright (c) 2020 — present, howaitoreivun.
-#
+#  Copyright (c) 2020 — present, snezhniy.
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-#
 #  Heavily inspired by https://github.com/Rapptz/RoboDanny <
 
 from __future__ import annotations
