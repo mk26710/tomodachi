@@ -262,7 +262,7 @@ class Tools(CogMixin, icon=discord.PartialEmoji.from_str("📁")):
         if not value:
             return await ctx.send(f":x: Nothing happened. Most likely you don't have a reminder `#{reminder_id}`.")
 
-        await self.bot.actions.reschedule()
+        await self.bot.actions.redispatch()
         await ctx.send(f":ok_hand: Successfully deleted `#{reminder_id}` reminder.")
 
     @reminder.command(name="purge", aliases=["clear"])
@@ -277,7 +277,7 @@ class Tools(CogMixin, icon=discord.PartialEmoji.from_str("📁")):
         if not count:
             return await ctx.send(":x: Nothing happened. Looks like you have no reminders.")
 
-        await self.bot.actions.reschedule()
+        await self.bot.actions.redispatch()
         await ctx.send(f":ok_hand: Deleted `{count}` reminder(s) from your list.")
 
 
