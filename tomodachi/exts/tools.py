@@ -201,7 +201,7 @@ class Tools(CogMixin, icon=discord.PartialEmoji.from_str("📁")):
             extra={"content": text},
         )
 
-        action = await self.bot.actions.create_action(action)
+        action = await self.bot.actions.schedule(action)
         when = timestamp(action.trigger_at)
 
         identifier = ""

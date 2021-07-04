@@ -21,7 +21,7 @@ from tomodachi.core.enums import ActionType
 if TYPE_CHECKING:
     from tomodachi.core.bot import Tomodachi
 
-__all__ = ["Action", "Actions"]
+__all__ = ["Action", "ActionScheduler"]
 
 
 class ReminderExtras(TypedDict):
@@ -61,7 +61,7 @@ class Action:
 
 
 @final
-class Actions:
+class ActionScheduler:
     def __init__(self, bot: Tomodachi):
         self.bot = bot
         self.cond = asyncio.Condition()
@@ -108,7 +108,7 @@ class Actions:
 
         return Action(**record)
 
-    async def create_action(self, a: Action):
+    async def schedule(self, a: Action):
         now = helpers.utcnow()
         delta = (a.trigger_at - now).total_seconds()
 
