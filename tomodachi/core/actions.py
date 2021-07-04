@@ -74,7 +74,7 @@ class ActionScheduler:
 
             if not action:
                 await self.cond.wait()
-                await self.reschedule()
+                await self.redispatch()
 
             now = helpers.utcnow()
             if action.trigger_at >= now:
@@ -82,9 +82,9 @@ class ActionScheduler:
                 await asyncio.sleep(delta)
 
             await self.trigger_action(action)
-            await self.reschedule()
+            await self.redispatch()
 
-    async def reschedule(self):
+    async def redispatch(self):
         if not self.task.cancelled() or self.task.done():
             self.task.cancel()
 
@@ -137,7 +137,7 @@ class ActionScheduler:
         # Once the new action created dispatcher has to be restarted
         # but only if the currently active action happens later than new
         if (self.active and self.active.trigger_at >= a.trigger_at) or self.active is None:
-            asyncio.create_task(self.reschedule())
+            asyncio.create_task(self.redispatch())
 
         return a
 
