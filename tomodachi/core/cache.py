@@ -49,7 +49,8 @@ class CachedSettings:
         if not record:
             raise CacheFail(f"{guild_id} doesn't exist in the mod_settings table.")
 
-        await self._parent.redis.set(f"MS-{guild_id}", orjson.dumps(dict(record)))
+        dump = orjson.dumps(dict(record))
+        await self._parent.redis.setex(f"MS-{guild_id}", 43200, dump)
 
     async def get(self, guild_id: int, *, refresh: bool = True):
         data = await self._parent.redis.get(f"MS-{guild_id}")
@@ -73,6 +74,5 @@ class Cache(CacheProto):
         await self.settings.refresh(guild_id)
 
     async def close(self):
-        self.settings = None
-        await self.redis.flushdb(True)
         await self.redis.close()
+        self.settings = None
