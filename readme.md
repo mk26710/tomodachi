@@ -2,10 +2,7 @@
 
 # Tomodachi Bot
 
-A Discord bot with a small amount of commands.
-
-Tomodachi was written for private use in the first place,
-so it doesn't really have that lots of features. 
+It can do some things ¯\_(ツ)_/¯
 
 ## Requirements
 
