@@ -18,7 +18,7 @@ from discord.ext import commands
 import config
 from tomodachi.utils import AniList, i, make_intents
 from tomodachi.core.cache import Cache
-from tomodachi.core.actions import Actions
+from tomodachi.core.actions import ActionScheduler
 from tomodachi.core.context import TomodachiContext
 from tomodachi.utils.database import db
 from tomodachi.core.exceptions import AlreadyBlacklisted
@@ -49,7 +49,7 @@ class Tomodachi(commands.AutoShardedBot):
         self.db = db
         self.pool = db.pool
         self.cache = Cache(self)
-        self.actions = Actions(self)
+        self.actions = ActionScheduler(self)
         self.infractions = Infractions(self)
 
         # list with user ids

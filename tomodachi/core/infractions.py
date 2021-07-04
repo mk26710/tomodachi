@@ -97,7 +97,7 @@ class Infractions:
 
         if create_action:
             # override prepared action object with the one from db
-            action = await self.bot.actions.create_action(action)
+            action = await self.bot.actions.schedule(action)
 
         async with self.bot.db.pool.acquire() as conn:
             query = """INSERT INTO infractions
