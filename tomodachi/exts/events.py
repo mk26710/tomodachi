@@ -80,7 +80,7 @@ class Events(CogMixin):
             raise Exception(f"Audit entry was not found for {action.name} of {user.id}")  # noqa
         entry = audits[0]
 
-        # ignore bans by the bot
+        # ignore actions of tomodachi bot
         if entry.user.id == self.bot.user.id:
             return
 
