@@ -61,7 +61,13 @@ class Events(CogMixin):
                 await conn.execute(query, guild_id)
 
     @commands.Cog.listener()
-    async def on_member_ban(self, guild: discord.Guild, user: Union[discord.User, discord.Member]):
+    async def on_mod_action(
+        self,
+        type: InfractionType,
+        action: discord.AuditLogAction,
+        guild: discord.Guild,
+        user: Union[discord.User, discord.Member],
+    ):
         settings = await self.bot.cache.settings.get(guild.id)
         if not settings.audit_infractions:
             return
@@ -69,13 +75,9 @@ class Events(CogMixin):
         if not guild.me.guild_permissions.view_audit_log:
             return await self._disable_audit_infractions(guild.id)
 
-        audits = await guild.audit_logs(
-            limit=1,
-            oldest_first=False,
-            action=discord.AuditLogAction.ban,
-        ).flatten()
+        audits = await guild.audit_logs(limit=1, oldest_first=False, action=action).flatten()
         if not audits:
-            raise Exception(f"Audit entry was not found for ban of {user.id}")
+            raise Exception(f"Audit entry was not found for {action.name} of {user.id}")  # noqa
         entry = audits[0]
 
         # ignore bans by the bot
@@ -83,13 +85,33 @@ class Events(CogMixin):
             return
 
         await self.bot.infractions.create(
-            inf_type=InfractionType.PERMABAN,
+            inf_type=type,
             expires_at=None,
             guild_id=guild.id,
             mod_id=entry.user.id,
             target_id=entry.target.id,
-            reason=entry.reason or "Manual ban with no reason.",
+            reason=entry.reason or f"Manual {action.name} with no reason.",  # noqa
             create_action=False,
+        )
+
+    @commands.Cog.listener()
+    async def on_member_ban(self, guild, user):
+        self.bot.dispatch(
+            "mod_action",
+            type=InfractionType.PERMABAN,
+            action=discord.AuditLogAction.ban,
+            guild=guild,
+            user=user,
+        )
+
+    @commands.Cog.listener()
+    async def on_member_unban(self, guild, user):
+        self.bot.dispatch(
+            "mod_action",
+            type=InfractionType.UNBAN,
+            action=discord.AuditLogAction.unban,
+            guild=guild,
+            user=user,
         )
 
 
