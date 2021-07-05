@@ -3,12 +3,14 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from typing import Union
+
 import discord
 from discord.ext import commands
 
 from tomodachi.core import CogMixin
 from tomodachi.utils import helpers, timestamp
-from tomodachi.core.enums import ActionType
+from tomodachi.core.enums import ActionType, InfractionType
 from tomodachi.core.actions import Action
 
 
@@ -51,6 +53,44 @@ class Events(CogMixin):
             )
         except (discord.Forbidden, discord.HTTPException):
             pass
+
+    async def _disable_audit_infractions(self, guild_id: int):
+        async with self.bot.cache.settings.fresh(guild_id):
+            async with self.bot.db.pool.acquire() as conn:
+                query = "update mod_settings set audit_infractions=false where guild_id=$1;"
+                await conn.execute(query, guild_id)
+
+    @commands.Cog.listener()
+    async def on_member_ban(self, guild: discord.Guild, user: Union[discord.User, discord.Member]):
+        settings = await self.bot.cache.settings.get(guild.id)
+        if not settings.audit_infractions:
+            return
+
+        if not guild.me.guild_permissions.view_audit_log:
+            return await self._disable_audit_infractions(guild.id)
+
+        audits = await guild.audit_logs(
+            limit=1,
+            oldest_first=False,
+            action=discord.AuditLogAction.ban,
+        ).flatten()
+        if not audits:
+            raise Exception(f"Audit entry was not found for ban of {user.id}")
+        entry = audits[0]
+
+        # ignore bans by the bot
+        if entry.user.id == self.bot.user.id:
+            return
+
+        await self.bot.infractions.create(
+            inf_type=InfractionType.PERMABAN,
+            expires_at=None,
+            guild_id=guild.id,
+            mod_id=entry.user.id,
+            target_id=entry.target.id,
+            reason=entry.reason or "Manual ban with no reason.",
+            create_action=False,
+        )
 
 
 def setup(bot):
