@@ -2,7 +2,7 @@
 
 # Tomodachi Bot
 
-It can do some things ¯\_(ツ)_/¯
+It can do some things ¯\\\_(ツ)_/¯
 
 ## Requirements
 
