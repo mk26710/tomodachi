@@ -59,10 +59,14 @@ class Tomodachi(commands.AutoShardedBot):
         # Global rate limit cooldowns mapping
         self.rate_limits = commands.CooldownMapping.from_cooldown(10, 10, commands.BucketType.user)
 
+        # After init tasks
+        self.loop.create_task(self.__ainit__())
         self.loop.create_task(self.once_ready())
+        self.loop.create_task(self.load_extensions())
 
-        # Fetch blacklisted users
-        self.loop.create_task(self.fetch_blacklist())
+    async def __ainit__(self):
+        await AniList.setup(self.session)
+        await self.fetch_blacklist()
 
     async def close(self):
         self.actions.task.cancel()
@@ -131,6 +135,13 @@ class Tomodachi(commands.AutoShardedBot):
 
         self.blacklist = [r["user_id"] for r in records]
 
+    async def load_extensions(self):
+        await self.wait_until_ready()
+
+        for ext in config.EXTENSIONS:
+            self.load_extension(f"tomodachi.exts.{ext}")
+            logging.info(f"loaded {ext}")
+
     async def once_ready(self):
         await self.wait_until_ready()
 
@@ -142,11 +153,6 @@ class Tomodachi(commands.AutoShardedBot):
         self.traceback_log = discord.utils.get(support_channels, name="traceback")
 
         await i.setup(support_guild.emojis)
-        await AniList.setup(self.session)
-
-        for ext in config.EXTENSIONS:
-            self.load_extension(f"tomodachi.exts.{ext}")
-            logging.info(f"loaded {ext}")
 
     async def get_or_fetch_user(self, user_id: int) -> discord.User:
         """Retrives a discord.User object from cache or fetches it if not cached"""
