@@ -43,7 +43,7 @@ def is_mod():
 
 def reminders_limit():
     async def predicate(ctx: TomodachiContext):
-        async with ctx.bot.pool.acquire() as conn:
+        async with ctx.bot.db.pool.acquire() as conn:
             query = "SELECT count(id) FROM actions WHERE author_id = $1 AND action_type = 'REMINDER';"
             stmt = await conn.prepare(query)
             count = await stmt.fetchval(ctx.author.id)
