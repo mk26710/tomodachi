@@ -36,6 +36,12 @@ class Tools(CogMixin, icon=discord.PartialEmoji.from_str("\N{FILE FOLDER}")):
             url = avatar_or_default(user).url
         return url
 
+    @commands.command(aliases=["now"])
+    async def unix(self, ctx: TomodachiContext):
+        """Current UNIX timestamp"""
+        ts = int(helpers.utcnow().timestamp())
+        await ctx.send(f"{ts}")
+
     @commands.command(description='To provide a sentence as one of options, use quotes "word1 word 2"')
     async def choose(self, ctx: TomodachiContext, *options: str):
         """Randomly selects a word or a sentence"""
