@@ -8,11 +8,12 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any, Union, Optional
 
-from databases import Database, DatabaseURL
+from databases import Database
 
 from config import POSTGRES_DSN
 
 if TYPE_CHECKING:
+    from databases import DatabaseURL
     from asyncpg.pool import Pool
 
 __all__ = ["db"]
@@ -23,20 +24,17 @@ class TomodachiDatabase(Database):
         "postgresql": "databases.backends.postgres:PostgresBackend",
     }
 
-    def __init__(self, url: Union[str, "DatabaseURL"], **options: Any):
+    def __init__(self, url: Union[str, DatabaseURL], **options: Any):
         super().__init__(url, **options)
-        self._connection_established = asyncio.Event()
+        self.connection_created = asyncio.Event()
 
     @property
     def pool(self) -> Optional[Pool]:
         return self._backend._pool  # noqa
 
-    async def wait_until_connected(self):
-        await self._connection_established.wait()
-
     async def connect(self) -> None:
         await super(TomodachiDatabase, self).connect()
-        self._connection_established.set()
+        self.connection_created.set()
 
     async def store_guild(self, guild_id: int):
         async with self.pool.acquire() as conn:
