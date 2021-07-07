@@ -15,11 +15,11 @@ import discord
 from discord.ext import commands
 
 import config
+import tomodachi.utils.database.instance
 from tomodachi.utils import AniList, i, make_intents
 from tomodachi.core.cache import Cache
 from tomodachi.core.actions import ActionScheduler
 from tomodachi.core.context import TomodachiContext
-from tomodachi.utils.database import db
 from tomodachi.core.exceptions import AlreadyBlacklisted
 from tomodachi.core.infractions import Infractions
 
@@ -27,6 +27,8 @@ __all__ = ["Tomodachi"]
 
 
 class Tomodachi(commands.AutoShardedBot):
+    db = tomodachi.utils.database.instance.db
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args,
@@ -41,16 +43,12 @@ class Tomodachi(commands.AutoShardedBot):
         self.session: aiohttp.ClientSession = kwargs.pop("extra_session")
         self.ROOT_DIR: Union[str, bytes] = kwargs.pop("ROOT_DIR")
 
-        # Alias to config module
         self.config = config
 
-        # Database shortcuts
-        self.db = db
-        self.pool = db.pool
+        # Database related
         self.cache = Cache(self)
         self.actions = ActionScheduler(self)
         self.infractions = Infractions(self)
-
         # list with user ids
         self.blacklist = []
 
@@ -63,7 +61,7 @@ class Tomodachi(commands.AutoShardedBot):
 
         self.loop.create_task(self.once_ready())
 
-        # Fetch custom prefixes and blacklisted users
+        # Fetch blacklisted users
         self.loop.create_task(self.fetch_blacklist())
 
     async def close(self):
@@ -77,8 +75,6 @@ class Tomodachi(commands.AutoShardedBot):
         await super().close()
 
     async def get_prefix(self, message: discord.Message):
-        await self.db.wait_until_connected()
-
         settings = await self.cache.settings.get(message.guild.id)
         prefix = settings.prefix or config.DEFAULT_PREFIX
         return [f"<@!{self.user.id}> ", f"<@{self.user.id}> ", prefix]
@@ -130,9 +126,7 @@ class Tomodachi(commands.AutoShardedBot):
             self.blacklist.remove(user_id)
 
     async def fetch_blacklist(self):
-        await self.db.wait_until_connected()
-
-        async with self.pool.acquire() as conn:
+        async with self.db.pool.acquire() as conn:
             records = await conn.fetch("SELECT DISTINCT * FROM blacklisted;")
 
         self.blacklist = [r["user_id"] for r in records]
