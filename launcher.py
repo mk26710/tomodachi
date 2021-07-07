@@ -6,6 +6,7 @@
 import asyncio
 import logging
 import os.path
+import contextlib
 
 import ujson
 import aiohttp
@@ -61,4 +62,6 @@ except ImportError:
 else:
     uvloop.install()
 
-asyncio.run(main())
+# it's just annoying at this point
+with contextlib.suppress(KeyboardInterrupt):
+    asyncio.run(main())
