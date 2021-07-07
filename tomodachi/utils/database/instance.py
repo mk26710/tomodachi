@@ -36,6 +36,10 @@ class TomodachiDatabase(Database):
         await super(TomodachiDatabase, self).connect()
         self.connection_created.set()
 
+    async def disconnect(self) -> None:
+        self.connection_created.clear()
+        await super().disconnect()
+
     async def store_guild(self, guild_id: int):
         async with self.pool.acquire() as conn:
             async with conn.transaction():
