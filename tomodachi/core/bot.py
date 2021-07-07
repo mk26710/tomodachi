@@ -116,7 +116,7 @@ class Tomodachi(commands.AutoShardedBot):
     async def temp_block(self, user_id: int, delay: Union[float, int]):
         """Temporary adds a user by their ID to the bot's blacklist"""
         if user_id in self.blacklist:
-            raise AlreadyBlacklisted(f"{user_id} is already blacklisted, failed to blacklist them temporarly.")
+            raise AlreadyBlacklisted(f"{user_id} is already blacklisted, failed to blacklist them temporarily.")
 
         self.blacklist.append(user_id)
         if delay:

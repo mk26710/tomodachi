@@ -205,9 +205,9 @@ class Tools(CogMixin, icon=discord.PartialEmoji.from_str("📁")):
 
         identifier = ""
         if action.id:
-            identifier = f" (#{action.id})"
+            identifier = f" (`#{action.id}`)"
 
-        await ctx.send(f":ok_hand: I will remind you about this at {when:F}" + identifier)
+        await ctx.send(f":ok_hand: I will remind you about this on **{when:F}**" + identifier)
 
     @reminder.command(name="list", aliases=["ls"])
     async def reminder_list(self, ctx: TomodachiContext, help="Prints all active reminders you have."):
