@@ -38,7 +38,7 @@ async def main():
 
     # Create new session and start the bot
     session = aiohttp.ClientSession()
-    tomodachi = Tomodachi(ROOT_DIR=ROOT_DIR, extra_session=session)
+    tomodachi = Tomodachi(session=session, root_dir=ROOT_DIR)
     tomodachi.load_extension("jishaku")
 
     try:

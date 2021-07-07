@@ -29,20 +29,16 @@ __all__ = ["Tomodachi"]
 class Tomodachi(commands.AutoShardedBot):
     db = tomodachi.utils.database.instance.db
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *, session: aiohttp.ClientSession, root_dir: Union[str, bytes]):
         super().__init__(
-            *args,
-            **kwargs,
             max_messages=150,
             command_prefix=self.get_prefix,
             intents=make_intents(),
             owner_ids=config.OWNER_IDS,
         )
         self._BotBase__cogs = commands.core._CaseInsensitiveDict()  # noqa
-
-        self.session: aiohttp.ClientSession = kwargs.pop("extra_session")
-        self.ROOT_DIR: Union[str, bytes] = kwargs.pop("ROOT_DIR")
-
+        self.session = session
+        self.ROOT_DIR = root_dir
         self.config = config
 
         # Database related
