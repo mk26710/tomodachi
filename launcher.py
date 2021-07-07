@@ -13,7 +13,6 @@ import discord
 
 import config
 from tomodachi.core.bot import Tomodachi
-from tomodachi.utils.database import db
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -33,18 +32,19 @@ async def main():
     await setup_logging()
     await setup_jishaku()
 
-    # Create pool connection
-    await db.connect()
+    # Connect to database
+    await Tomodachi.db.connect()
+    await Tomodachi.db.connection_created.wait()
 
     # Create new session and start the bot
-    async with aiohttp.ClientSession() as session:
-        tomodachi = Tomodachi(ROOT_DIR=ROOT_DIR, extra_session=session)
-        tomodachi.load_extension("jishaku")
+    session = aiohttp.ClientSession()
+    tomodachi = Tomodachi(ROOT_DIR=ROOT_DIR, extra_session=session)
+    tomodachi.load_extension("jishaku")
 
-        try:
-            await tomodachi.start(config.TOKEN)
-        finally:
-            await tomodachi.close()
+    try:
+        await tomodachi.start(config.TOKEN)
+    finally:
+        await tomodachi.close()
 
 
 # patch d.py with ujson
