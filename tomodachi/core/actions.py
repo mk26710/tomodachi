@@ -92,7 +92,7 @@ class ActionScheduler:
             self.cond.notify_all()
 
     async def get_action(self):
-        async with self.bot.pool.acquire() as conn:
+        async with self.bot.db.pool.acquire() as conn:
             query = """SELECT *
                 FROM actions
                 WHERE (CURRENT_TIMESTAMP + '28 days'::interval) > actions.trigger_at
@@ -147,7 +147,7 @@ class ActionScheduler:
         else:
             self.bot.dispatch("triggered_action", action=action)
 
-        await self.bot.pool.execute("DELETE FROM actions WHERE id = $1;", action.id)
+        await self.bot.db.pool.execute("DELETE FROM actions WHERE id = $1;", action.id)
 
     async def trigger_short_action(self, seconds, action: Action):
         await asyncio.sleep(seconds)
