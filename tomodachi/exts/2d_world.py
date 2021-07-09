@@ -87,7 +87,7 @@ class AniListMenu(TomodachiMenu):
             self.embed.add_field(name="Genres", value=", ".join(media.genres))
 
 
-class TwoDimWorld(CogMixin, name="アニメ", icon=discord.PartialEmoji.from_str("\N{DANGO}")):
+class TwoDimWorld(CogMixin, name="アニメ", icon="\N{DANGO}"):
     __anilist_notice = "Adult content is hidden from non-NSFW channels"
 
     @commands.is_nsfw()
