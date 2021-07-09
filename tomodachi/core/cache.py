@@ -66,7 +66,8 @@ class CachedSettings:
 class Cache(CacheProto):
     def __init__(self, bot: Tomodachi) -> None:
         self.bot = bot
-        self.redis = aioredis.from_url(bot.config.REDIS_URI, decode_responses=True)
+        self.pool = aioredis.ConnectionPool.from_url(bot.config.REDIS_URI, decode_responses=True)
+        self.redis = aioredis.Redis(connection_pool=self.pool)
         self.settings = CachedSettings(self)
 
     async def refresh_by_guild(self, guild_id: int):
@@ -74,4 +75,5 @@ class Cache(CacheProto):
 
     async def close(self):
         await self.redis.close()
+        await self.pool.disconnect(inuse_connections=True)
         self.settings = None
