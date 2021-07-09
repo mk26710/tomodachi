@@ -11,7 +11,6 @@ import discord
 from discord.ext import commands
 
 from tomodachi.core import checks
-from tomodachi.utils import i
 from tomodachi.core.cog import CogMixin
 from tomodachi.core.context import TomodachiContext
 from tomodachi.utils.humanbool import humanbool
@@ -27,42 +26,36 @@ class Management(CogMixin, icon="\N{HAMMER AND WRENCH}"):
 
     @config.command(help="Changes prefix of a bot in this server")
     async def prefix(self, ctx: TomodachiContext, new_prefix: str = None):
-        settings = await ctx.settings()
+        """Controls bot’s prefix.
 
-        if not new_prefix:
-            current_prefix = settings.prefix or self.bot.config.DEFAULT_PREFIX
-            return await ctx.send(f"Prefix in this server is `{current_prefix}`")
+        If new prefix is not provided, current prefix will be shown."""
+        settings = await ctx.settings()
+        prefix = settings.prefix or self.bot.config.DEFAULT_PREFIX
+
+        if (not new_prefix) or (prefix == new_prefix):
+            await ctx.send(f"\U0001F50E Current prefix is `{prefix}`.")
+            return
 
         prefix = await self.bot.update_prefix(ctx.guild.id, new_prefix)
-        await ctx.send(f"Updated prefix in the server to `{prefix}`")
+        await ctx.send(f"\U0001F44C The prefix has been changed to `{prefix}`.")
 
     @config.command(aliases=["dm_targets", "dm_intruders"])
     async def dm_on_mod_actions(self, ctx: TomodachiContext, mode: Optional[bool] = None):
-        """Enable or disable DMs on moderation actions
+        """Controls DMs on moderation actions.
 
-        If mode is not specified you'll see current setting value"""
+        If mode is not specified, current mode will be shown."""
         settings = await ctx.settings()
 
-        if mode is None:
-            if settings.dm_targets is True:
-                msg = f"{i:roundedCheck} Users receive messages on moderation actions."
-            else:
-                msg = ":x: Users don't receive messages on moderation actions."
-            return await ctx.send(msg)
-
-        if mode is settings.dm_targets:
-            return await ctx.send(":warning: The mode you have provided is the same as current one.")
+        if (mode is None) or (mode is settings.dm_targets):
+            await ctx.send(f"\U0001F50E DMs on moderation actions are currently **{humanbool(settings.dm_targets)}**.")
+            return
 
         async with self.bot.cache.settings.fresh(ctx.guild.id):
             async with self.bot.db.pool.acquire() as conn:
                 query = "update mod_settings set dm_targets=$2 where guild_id=$1 returning dm_targets;"
-                new_dm_targets = await conn.fetchval(query, ctx.guild.id, mode)
+                result = await conn.fetchval(query, ctx.guild.id, mode)
 
-        if new_dm_targets is True:
-            msg = f"{i:roundedCheck} Users will receive DMs on moderation actions."
-        else:
-            msg = ":x: Users will not receive DMs on moderation actions."
-        await ctx.send(msg)
+        await ctx.send(f"\U0001F44C DMs on moderation actions has been **{humanbool(result)}**.")
 
     @config.group()
     async def mod_roles(self, ctx: TomodachiContext):
@@ -126,7 +119,6 @@ class Management(CogMixin, icon="\N{HAMMER AND WRENCH}"):
 
             await ctx.send(embed=e)
 
-    # todo: copy message formatting from here to other commands
     @config.command(aliases=["automatic_infractions", "audit_infractions"])
     async def auto_infractions(self, ctx: TomodachiContext, mode: bool = None):
         """Control infractions creation based on audit logs."""
