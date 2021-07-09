@@ -14,6 +14,7 @@ from tomodachi.core import checks
 from tomodachi.utils import i
 from tomodachi.core.cog import CogMixin
 from tomodachi.core.context import TomodachiContext
+from tomodachi.utils.humanbool import humanbool
 
 
 class Management(CogMixin, icon=discord.PartialEmoji.from_str("\N{HAMMER AND WRENCH}")):
@@ -124,6 +125,28 @@ class Management(CogMixin, icon=discord.PartialEmoji.from_str("\N{HAMMER AND WRE
             e.title = f"No longer Mod Roles | {ctx.guild.name}"
 
             await ctx.send(embed=e)
+
+    # todo: copy message formatting from here to other commands
+    @config.command(aliases=["automatic_infractions", "audit_infractions"])
+    async def auto_infractions(self, ctx: TomodachiContext, mode: bool = None):
+        """Control infractions creation based on audit logs."""
+        settings = await ctx.settings()
+
+        if (mode is None) or (mode == settings.audit_infractions):
+            await ctx.send(
+                f"\U0001f50e Automatic Infractions are currently **{humanbool(settings.audit_infractions)}**."
+            )
+            return
+
+        async with self.bot.cache.settings.fresh(ctx.guild.id):
+            async with self.bot.db.pool.acquire() as conn:
+                query = """update mod_settings as ms 
+                    set audit_infractions=$2 
+                    where guild_id=$1 
+                    returning ms.audit_infractions;"""
+                result = await conn.fetchval(query, ctx.guild.id, mode)
+
+        await ctx.send(f"\U0001F44C Automatic Infractions has been **{humanbool(result)}**.")
 
 
 def setup(bot):
