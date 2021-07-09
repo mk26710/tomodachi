@@ -62,13 +62,16 @@ class Management(CogMixin, icon="\N{HAMMER AND WRENCH}"):
         if not ctx.invoked_subcommand:
             settings = await ctx.settings()
             roles = [ctx.guild.get_role(r_id) or discord.Object(id=r_id) for r_id in settings.mod_roles]
+            if not roles:
+                await ctx.send("\U0001F50E There are no moderators roles configured.")
+                return
 
-            embed = discord.Embed()
-            embed.color = 0x5865F2
-            embed.description = "\n".join(getattr(r, "mention", "deleted-role") + f" (`{r.id}`)" for r in roles)
-            embed.title = f"Mod Roles | {ctx.guild.name}"
+            e = discord.Embed(
+                colour=discord.Colour.blurple(),
+                description="\n".join(getattr(r, "mention", "deleted-role") + f" (`{r.id}`)" for r in roles),
+            )
 
-            await ctx.send(embed=embed)
+            await ctx.send("\U0001F50E List of moderators roles:", embed=e)
 
     @mod_roles.command(name="add")
     async def mod_roles_add(self, ctx: TomodachiContext, roles: commands.Greedy[discord.Role]):
@@ -87,12 +90,12 @@ class Management(CogMixin, icon="\N{HAMMER AND WRENCH}"):
                 is_added = await conn.fetchval(query, ctx.guild.id, [r.id for r in to_add])
 
         if is_added:
-            e = discord.Embed()
-            e.color = 0x2ECC71
-            e.description = "\n".join(f"+ {r.mention} (`{r.id}`)" for r in to_add)
-            e.title = f"Mod Roles Added | {ctx.guild.name}"
+            e = discord.Embed(
+                colour=discord.Colour.green(),
+                description="\n".join(f"+ {r.mention} (`{r.id}`)" for r in to_add),
+            )
 
-            await ctx.send(embed=e)
+            await ctx.send("\U0001F44C Added to moderators roles:", embed=e)
 
     @mod_roles.command(name="remove", aliases=["rmv", "delete", "del"])
     async def mod_roles_remove(self, ctx: TomodachiContext, roles: commands.Greedy[discord.Role]):
@@ -112,12 +115,12 @@ class Management(CogMixin, icon="\N{HAMMER AND WRENCH}"):
                 removed = await conn.fetchval(query, ctx.guild.id, [r.id for r in to_delete])
 
         if removed:
-            e = discord.Embed()
-            e.color = 0xFF0000
-            e.description = "\n".join(f"- {r.mention} (`{r.id}`)" for r in to_delete)
-            e.title = f"No longer Mod Roles | {ctx.guild.name}"
+            e = discord.Embed(
+                colour=discord.Colour.red(),
+                description="\n".join(f"- {r.mention} (`{r.id}`)" for r in to_delete),
+            )
 
-            await ctx.send(embed=e)
+            await ctx.send("\U0001F44C Removed from moderators roles:", embed=e)
 
     @config.command(aliases=["automatic_infractions", "audit_infractions"])
     async def auto_infractions(self, ctx: TomodachiContext, mode: bool = None):
