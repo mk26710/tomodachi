@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import abc
 import functools
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Union, Optional
 
 from discord.ext import commands
 from discord.partial_emoji import PartialEmoji
@@ -35,7 +35,7 @@ class Mixin(metaclass=abc.ABCMeta):
 
 
 class CogMixin(Mixin, commands.Cog, metaclass=CogABCMeta):
-    icon: Optional[PartialEmoji]
+    icon: Optional[Union[PartialEmoji, str]]
 
     def __init__(self, /, tomodachi):
         self.bot: Tomodachi = tomodachi

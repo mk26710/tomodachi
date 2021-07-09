@@ -17,7 +17,7 @@ from tomodachi.core.context import TomodachiContext
 from tomodachi.utils.humanbool import humanbool
 
 
-class Management(CogMixin, icon=discord.PartialEmoji.from_str("\N{HAMMER AND WRENCH}")):
+class Management(CogMixin, icon="\N{HAMMER AND WRENCH}"):
     @commands.guild_only()
     @commands.check_any(checks.is_manager(), commands.is_owner())
     @commands.group(help="Group of configuration commands", aliases=["cfg"])
