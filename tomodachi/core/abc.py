@@ -4,14 +4,17 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import annotations
-from typing import Protocol, TYPE_CHECKING, runtime_checkable
+
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
+    from aioredis.client import Redis, ConnectionPool
+
     from tomodachi.core.bot import Tomodachi
-    from aioredis.client import Redis
 
 
 @runtime_checkable
 class CacheProto(Protocol):
     bot: Tomodachi
+    pool: ConnectionPool
     redis: Redis
