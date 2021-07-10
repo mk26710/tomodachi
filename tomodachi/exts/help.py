@@ -6,8 +6,7 @@
 from __future__ import annotations
 
 import re
-import itertools
-from typing import List, Union
+from typing import TYPE_CHECKING, Dict, List, Union, Mapping, Optional
 
 import discord
 from discord.ext import commands
@@ -17,28 +16,37 @@ from tomodachi.core import CogMixin, TomodachiContext
 from tomodachi.core.menus import TomodachiMenu
 from tomodachi.utils.icons import i
 
-# Type alias for a commands mapping, quite helpful
-Commands = List[Union[commands.Command, commands.Group]]
+if TYPE_CHECKING:
+    Commands = List[Union[commands.Command, commands.Group]]
+    MenuPayload = List[Dict[str, str]]
+    MenuEntries = MenuPayload
 
 PREFIX_PLACEHOLDER = re.compile(r"%prefix%", re.MULTILINE)
 
 
 class BotHelpMenu(TomodachiMenu):
-    def __init__(self, entries, *, note: str, title: str, thumbnail: str = None):
-        super().__init__(entries, title=title)
-        self.note = note
-        self.entries = entries
-        self.embed.description = note
-        self.embed.colour = 0x2F3136
-        self.embed.set_thumbnail(url=thumbnail)
+    def __init__(
+        self,
+        entries: MenuEntries,
+        *,
+        title: Optional[str] = None,
+        embed: Optional[discord.Embed] = None,
+        inline_fields: bool = True,
+        note: Optional[str] = None,
+    ):
+        super().__init__(list(chunked(entries, 6)), title=title, embed=embed)
+        self.inline_fields = inline_fields
+        if note:
+            self.embed.description = note
 
-    async def format_embed(self, payload: list[dict[str, list[Union[commands.Command, commands.Group]]]]):
+    async def format_embed(self, payload: MenuPayload):
         self.embed.clear_fields()
         if self.max_index > 0:
             self.embed.set_footer(text=f"Page {self.current_index + 1} / {self.max_index + 1}")
-        for group in payload:
-            for category, _commands in group.items():
-                self.embed.add_field(name=category, value=" ".join(f"`{c.qualified_name}`" for c in _commands))
+
+        for entry in payload:
+            for key, value in entry.items():
+                self.embed.add_field(name=key, value=value, inline=self.inline_fields)
 
 
 class TomodachiHelpCommand(commands.MinimalHelpCommand):
@@ -58,60 +66,62 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
         fmt = "`{0}{1}` — {2}\n" if command.short_doc else "`{0}{1}`\n"
         return fmt.format(self.context.prefix, command.qualified_name, command.short_doc)
 
-    async def send_bot_help(self, _):
-        def get_category(command):
-            _cog: CogMixin = command.cog
-            return _cog.formatted_name if _cog is not None else "Uncategorized"
+    async def send_bot_help(self, mapping: Mapping[Optional[CogMixin], List[commands.Command]]):
+        mapping = sorted(mapping.items(), key=lambda m: len(m[1]), reverse=True)
 
-        filtered: Commands = await self.filter_commands(self.context.bot.commands, sort=True, key=get_category)
+        entries = []
+        for cog, commands in mapping:
+            filtered = await self.filter_commands(commands, sort=True)
+            command_signatures = [f"`{c.qualified_name}`" for c in filtered]
+            if command_signatures:
+                cog_name = getattr(cog, "formatted_name", "No Category")
+                entries.append({cog_name: " ".join(command_signatures)})
 
-        grouped = itertools.groupby(filtered, key=get_category)
-        iterated = tuple((cat, tuple(cmds)) for cat, cmds in grouped)
-        ordered = sorted(iterated, key=lambda x: len("".join(cmd.name for cmd in x[1])), reverse=True)
-        chunks = list(chunked(list({cat: list(cmds)} for cat, cmds in ordered), 6))
-
-        menu = BotHelpMenu(
-            chunks,
-            note=self.get_opening_note(),
-            title="Available Commands",
-            thumbnail=self.context.bot.user.avatar.url,
-        )
-
+        menu = BotHelpMenu(entries, title="Available commands", note=self.get_opening_note())
         await menu.start(self.context, channel=self.get_destination())
 
+    def get_command_signature(self, command):
+        return f"{command.qualified_name} {command.signature}"
+
     async def send_cog_help(self, cog: CogMixin):
-        description = ""
-
-        embed = discord.Embed(title=cog.formatted_name, colour=self._e_colour)
-        embed.set_thumbnail(url=self.context.bot.user.avatar.url)
-
-        if cog.description:
-            description += f"{cog.description}\n\n"
-
+        channel = self.get_destination()
         filtered: Commands = await self.filter_commands(cog.get_commands(), sort=True)
+        if not filtered:
+            return await channel.send("\N{LOCK} You can't use any commands from this cog.")
 
-        if filtered:
-            for command in filtered:
-                description += self.format_command(command)
+        entries = []
+        for command in filtered:
+            command_name = self.get_command_signature(command)
+            entries.append({command_name: command.short_doc or "Missing description."})
 
-        embed.description = re.sub(PREFIX_PLACEHOLDER, self.context.prefix, description)
+        menu = BotHelpMenu(
+            entries,
+            title=f"{cog.formatted_name}",
+            note=cog.description,
+            inline_fields=False,
+        )
 
-        await self.get_destination().send(embed=embed)
+        await menu.start(self.context, channel=channel)
 
     async def send_group_help(self, group):
-        description = ""
-
-        embed = discord.Embed(colour=self._e_colour, title=f"{group} commands")
-        embed.set_thumbnail(url=self.context.bot.user.avatar.url)
-
+        channel = self.get_destination()
         filtered: Commands = await self.filter_commands(group.commands, sort=True)
-        if filtered:
-            for command in filtered:
-                description += self.format_command(command)
+        if not filtered:
+            return await channel.send("\N{LOCK} You can't use any commands from this group.")
 
-        embed.description = re.sub(PREFIX_PLACEHOLDER, self.context.prefix, description)
+        entries = []
+        for command in filtered:
+            command_name = self.get_command_signature(command)
+            entries.append({command_name: command.short_doc or "Missing description."})
 
-        await self.get_destination().send(embed=embed)
+        menu = BotHelpMenu(
+            entries,
+            title=f"{group.qualified_name} commands group",
+            note=group.description,
+            inline_fields=False,
+        )
+
+        await menu.start(self.context, channel=channel)
 
     async def send_command_help(self, command: commands.Command):
         embed = discord.Embed(
