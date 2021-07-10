@@ -22,7 +22,7 @@ class Management(CogMixin, icon="\N{HAMMER AND WRENCH}"):
     @commands.group(help="Group of configuration commands", aliases=["cfg"])
     async def config(self, ctx: TomodachiContext):
         if not ctx.invoked_subcommand:
-            await ctx.send(f"See `{ctx.prefix}help config` to learn about subcommands.")
+            await ctx.send_help("config")
 
     @config.command(help="Changes prefix of a bot in this server")
     async def prefix(self, ctx: TomodachiContext, new_prefix: str = None):
