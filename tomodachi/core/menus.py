@@ -28,10 +28,10 @@ class IndexNotChanged(Exception):
 
 
 class TomodachiMenu(menus.Menu):
-    def __init__(self, entries: MenuEntries, *, title: Optional[str] = None):
+    def __init__(self, entries: MenuEntries, *, title: Optional[str] = None, embed: Optional[discord.Embed] = None):
         super().__init__(timeout=50.0, delete_message_after=False, clear_reactions_after=True)
         self.can_manage_messages: Optional[bool] = None
-        self.embed = discord.Embed(title=title)
+        self.embed = embed or discord.Embed(title=title)
         self.entries = entries
         self.__current_index = 0
         self.__max_index = len(entries) - 1
