@@ -56,6 +56,13 @@ class Genshin(CogMixin, icon=discord.PartialEmoji(name="cryo", id=85355312754170
             alt_ctx = await copy_context_with(ctx, author=ctx.author, content=command_string)
             await alt_ctx.command.invoke(alt_ctx)
 
+    @commands.cooldown(1, 1.0, commands.BucketType.channel)
+    @commands.command(hidden=True)
+    async def ayaka(self, ctx: TomodachiContext):
+        """Congrats, you found the best genshin impact girl!"""
+        url = "https://cdn.discordapp.com/attachments/864220107396218890/864220136231534592/Ayaka_Dancing_Specialist_1080p60fps.mp4"
+        await ctx.send(url)
+
 
 def setup(bot):
     bot.add_cog(Genshin(bot))
