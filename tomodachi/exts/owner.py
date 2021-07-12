@@ -12,25 +12,11 @@ from discord.ext import commands
 from asyncpg.exceptions import UniqueViolationError
 
 from tomodachi.core import CogMixin, TomodachiContext
-from tomodachi.utils.icons import i
 
 
 class Owner(CogMixin, icon=discord.PartialEmoji(name="developer", id=853555901050781696)):
-    def __init__(self, /, tomodachi):
-        super().__init__(tomodachi)
-        self.deletion_emoji_detector = i.store["fuck"]
-
     async def cog_check(self, ctx: TomodachiContext):
         return await self.bot.is_owner(ctx.author)
-
-    @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
-        if self.deletion_emoji_detector.id == payload.emoji.id and payload.user_id == self.bot.owner_id:
-            c = self.bot.get_channel(payload.channel_id) or await self.bot.fetch_channel(payload.channel_id)
-            m = await c.fetch_message(payload.message_id)
-
-            if m.author.id == self.bot.user.id:
-                await m.delete()
 
     @commands.command(aliases=["block", "bl"])
     async def blacklist(self, ctx: TomodachiContext, target: discord.User, *, reason: str = "Just because."):
