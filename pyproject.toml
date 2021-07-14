@@ -1,5 +1,5 @@
 [tool.poetry]
-authors = ["snezhniy <72914371+snezhniy@users.noreply.github.com>"]
+authors = ["kodamio <72914371+kodamio@users.noreply.github.com>"]
 description = "Multipurpose Discord bot written in Python"
 license = "MPL-2.0"
 name = "tomodachi"
