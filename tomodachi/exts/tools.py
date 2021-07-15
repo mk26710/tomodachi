@@ -7,7 +7,7 @@ import io
 import random
 import asyncio
 import functools
-from typing import Union
+from typing import Dict, List, Union
 
 import discord
 import humanize
@@ -24,6 +24,36 @@ from tomodachi.utils.converters import EntryID, TimeUnit
 EmojiProxy = Union[discord.Emoji, discord.PartialEmoji]
 
 
+class JishoMenu(TomodachiMenu):
+    def __init__(self, entries: List[Dict]):
+        super().__init__(entries, title=None)
+        self.embed.color = 0x56D926
+
+    def make_footer_text(self):
+        footer = "Provided by jisho.org"
+        if self.max_index > 0:
+            footer += f" (Page {self.current_index+1}/{self.max_index+1})"
+        return footer
+
+    async def format_embed(self, payload):
+        self.embed.clear_fields()
+
+        self.embed.title = payload["japanese"][0].get("word", payload["slug"])
+        if jlpt := payload["jlpt"]:
+            self.embed.title += " (%s)" % ", ".join(str(level).upper() for level in jlpt)
+
+        if reading := payload["japanese"][0].get("reading"):
+            self.embed.add_field(name="Reading", value=reading, inline=False)
+
+        if senses := payload["senses"]:
+            definitions = "".join("%s;\n" % ", ".join(sense["english_definitions"]) for sense in senses)
+            self.embed.add_field(name="Senses", value=definitions, inline=False)
+
+        self.embed.description = None if not senses[0]["info"] else "\n".join(senses[0]["info"])
+
+        self.embed.set_footer(text=self.make_footer_text())
+
+
 class Tools(CogMixin, icon="\N{FILE FOLDER}"):
     @staticmethod
     async def get_image_url(message: discord.Message, user: Union[discord.Member, discord.User] = None):
@@ -35,6 +65,23 @@ class Tools(CogMixin, icon="\N{FILE FOLDER}"):
         elif user is not None:
             url = avatar_or_default(user).url
         return url
+
+    @commands.command()
+    @commands.cooldown(1, 4.0, commands.BucketType.user)
+    async def jisho(self, ctx: TomodachiContext, *, query: str):
+        """Make a query in the online Japanese dictionary provided by jisho"""
+        url = "https://jisho.org/api/v1/search/words"
+        params = {"keyword": query}
+
+        response = await self.bot.session.get(url, params=params)
+        json = await response.json()
+        data = json["data"]
+
+        if not data:
+            return await ctx.send("\U000026a0 No results were found, try changing the query.")
+
+        menu = JishoMenu(data)
+        await menu.start(ctx, channel=ctx.channel)
 
     @commands.command(aliases=["now"])
     async def unix(self, ctx: TomodachiContext):
