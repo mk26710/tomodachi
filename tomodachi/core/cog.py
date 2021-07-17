@@ -5,37 +5,22 @@
 
 from __future__ import annotations
 
-import abc
 import functools
 from typing import TYPE_CHECKING, Union, Optional
 
+import discord
 from discord.ext import commands
-from discord.partial_emoji import PartialEmoji
 
 if TYPE_CHECKING:
     from tomodachi.core.bot import Tomodachi
 
 
-__all__ = ["CogMixin", "CogABCMeta"]
+__all__ = ["CogMixin"]
 
 
-class CogABCMeta(commands.CogMeta, abc.ABCMeta):
-    def __new__(mcs, *args, **kwargs):
-        try:
-            icon = kwargs.pop("icon")
-        except KeyError:
-            icon = None
-        new_mcs = super().__new__(mcs, *args, **kwargs)
-        new_mcs.icon = icon
-        return new_mcs
-
-
-class Mixin(metaclass=abc.ABCMeta):
-    pass
-
-
-class CogMixin(Mixin, commands.Cog, metaclass=CogABCMeta):
-    icon: Optional[Union[PartialEmoji, str]]
+class CogMixin(commands.Cog, metaclass=commands.CogMeta):
+    def __init_subclass__(cls, *, icon=None) -> None:
+        cls.icon: Optional[Union[discord.PartialEmoji, str]] = icon
 
     def __init__(self, /, tomodachi):
         self.bot: Tomodachi = tomodachi
