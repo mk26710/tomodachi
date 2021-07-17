@@ -19,7 +19,7 @@ class UserInfoFlags(commands.FlagConverter, prefix="--", delimiter=""):
     steal: bool = False
 
 
-class Info(CogMixin, icon=discord.PartialEmoji(name="rich_presence", id=742312550821134396)):
+class Info(CogMixin, colour=0x8A8E94, icon=discord.PartialEmoji(name="rich_presence", id=742312550821134396)):
     @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command(aliases=["avy", "av"], help="Provides you an avatar of some discord user")
     async def avatar(self, ctx: TomodachiContext, user: discord.User = None, *, flags: UserInfoFlags):

@@ -87,7 +87,7 @@ class AniListMenu(TomodachiMenu):
             self.embed.add_field(name="Genres", value=", ".join(media.genres))
 
 
-class TwoDimWorld(CogMixin, name="アニメ", icon="\N{DANGO}"):
+class TwoDimWorld(CogMixin, name="アニメ", icon="\N{DANGO}", colour=0xFCB1E3):
     """Commands related to the otaku culture.
     Please note that adult content is only available in the NSFW channels."""
 

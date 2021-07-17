@@ -54,7 +54,7 @@ class JishoMenu(TomodachiMenu):
         self.embed.set_footer(text=self.make_footer_text())
 
 
-class Tools(CogMixin, icon="\N{FILE FOLDER}"):
+class Tools(CogMixin, icon="\N{FILE FOLDER}", colour=0x55ACEE):
     @staticmethod
     async def get_image_url(message: discord.Message, user: Union[discord.Member, discord.User] = None):
         url = None
