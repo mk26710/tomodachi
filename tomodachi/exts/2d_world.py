@@ -88,7 +88,8 @@ class AniListMenu(TomodachiMenu):
 
 
 class TwoDimWorld(CogMixin, name="アニメ", icon="\N{DANGO}"):
-    __anilist_notice = "Adult content is hidden from non-NSFW channels"
+    """Commands related to the otaku culture.
+    Please note that adult content is only available in the NSFW channels."""
 
     @commands.command(hidden=True)
     async def impulse(self, ctx: TomodachiContext):
@@ -116,7 +117,7 @@ class TwoDimWorld(CogMixin, name="アニメ", icon="\N{DANGO}"):
         await ctx.send(embed=embed)
 
     @commands.cooldown(1, 7.0, commands.BucketType.user)
-    @commands.command(help="Searches for information about mangas on AniList", description=__anilist_notice)
+    @commands.command(help="Searches for information about mangas on AniList")
     async def manga(self, ctx: TomodachiContext, *, query: str):
         async with ctx.typing():
             data = await AniList.lookup(query, MediaType.MANGA, hide_adult=not ctx.channel.is_nsfw())
@@ -127,7 +128,7 @@ class TwoDimWorld(CogMixin, name="アニメ", icon="\N{DANGO}"):
             await menu.start(ctx)
 
     @commands.cooldown(1, 7.0, commands.BucketType.user)
-    @commands.command(help="Searches for information about animes on AniList", description=__anilist_notice)
+    @commands.command(help="Searches for information about animes on AniList")
     async def anime(self, ctx: TomodachiContext, *, query: str):
         async with ctx.typing():
             data = await AniList.lookup(query, hide_adult=not ctx.channel.is_nsfw())
