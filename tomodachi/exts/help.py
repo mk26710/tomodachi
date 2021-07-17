@@ -33,11 +33,14 @@ class BotHelpMenu(TomodachiMenu):
         embed: Optional[discord.Embed] = None,
         inline_fields: bool = True,
         note: Optional[str] = None,
+        colour: Optional[Union[discord.Colour, int]] = None,
     ):
         super().__init__(list(chunked(entries, 6)), title=title, embed=embed)
         self.inline_fields = inline_fields
         if note:
             self.embed.description = note
+        if colour is not None:
+            self.embed.colour = colour
 
     async def format_embed(self, payload: MenuPayload):
         self.embed.clear_fields()
@@ -99,6 +102,7 @@ class TomodachiHelpCommand(commands.MinimalHelpCommand):
             title=f"{cog.formatted_name}",
             note=cog.description,
             inline_fields=False,
+            colour=cog.colour,
         )
 
         await menu.start(self.context, channel=channel)
