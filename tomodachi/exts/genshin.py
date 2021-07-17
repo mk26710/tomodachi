@@ -45,7 +45,7 @@ class Genshin(CogMixin, icon=discord.PartialEmoji(name="cryo", id=85355312754170
         await msg.add_reaction(i("slowmode"))
 
         def check(r, user):
-            return user.id == ctx.author.id and r.emoji.id == i("slowmode").id
+            return user.id == ctx.author.id and r.emoji.id == i("slowmode").id and r.message.id == msg.id
 
         try:
             await self.bot.wait_for("reaction_add", timeout=30.0, check=check)
