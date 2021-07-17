@@ -19,7 +19,7 @@ from tomodachi.utils.icons import i
 from tomodachi.utils.converters import uint
 
 
-class Genshin(CogMixin, icon=discord.PartialEmoji(name="cryo", id=853553127541702679)):
+class Genshin(CogMixin, colour=0xA3E3EF, icon=discord.PartialEmoji(name="cryo", id=865969604832395284)):
     @commands.cooldown(1, 5.0, commands.BucketType.user)
     @commands.command(help="Counts how much time left until your resin refills")
     async def resin(

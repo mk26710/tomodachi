@@ -14,7 +14,7 @@ from asyncpg.exceptions import UniqueViolationError
 from tomodachi.core import CogMixin, TomodachiContext
 
 
-class Owner(CogMixin, icon=discord.PartialEmoji(name="developer", id=853555901050781696)):
+class Owner(CogMixin, colour=0x5865F2, icon=discord.PartialEmoji(name="developer", id=853555901050781696)):
     async def cog_check(self, ctx: TomodachiContext):
         return await self.bot.is_owner(ctx.author)
 
