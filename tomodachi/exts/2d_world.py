@@ -90,6 +90,11 @@ class AniListMenu(TomodachiMenu):
 class TwoDimWorld(CogMixin, name="アニメ", icon="\N{DANGO}"):
     __anilist_notice = "Adult content is hidden from non-NSFW channels"
 
+    @commands.command(hidden=True)
+    async def impulse(self, ctx: TomodachiContext):
+        """Hey, that's another easter egg!"""
+        await ctx.send("https://youtu.be/hkL4hW4eniI")
+
     @commands.is_nsfw()
     @commands.cooldown(1, 7.0, commands.BucketType.user)
     @commands.command(help="Finds some waifus for you", description="Technically it should be SFW, but sometimes not")
