@@ -135,9 +135,9 @@ class Management(CogMixin, icon="\N{HAMMER AND WRENCH}", colour=0xF4900C):
 
         async with self.bot.cache.settings.fresh(ctx.guild.id):
             async with self.bot.db.pool.acquire() as conn:
-                query = """update mod_settings as ms 
-                    set audit_infractions=$2 
-                    where guild_id=$1 
+                query = """update mod_settings as ms
+                    set audit_infractions=$2
+                    where guild_id=$1
                     returning ms.audit_infractions;"""
                 result = await conn.fetchval(query, ctx.guild.id, mode)
 
