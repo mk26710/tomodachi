@@ -52,18 +52,23 @@ class ErrorHandler(CogMixin):
         if isinstance(ctx.channel, discord.TextChannel):
             await ctx.channel.send(f"{error}")
 
-        if not isinstance(error, self.suppressed_tracebacks):
-            # send some debug information to bot owner
-            tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
-            traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+        if isinstance(error, self.suppressed_tracebacks):
+            return
 
-            e = discord.Embed(color=0xFF0000, title="Exception")
-            e.add_field(name="Command", value=f"{ctx.message.content[0:1000]}")
-            e.add_field(name="Author", value=f"{ctx.author} (`{ctx.author.id}`)")
-            e.add_field(name="Guild", value="{}".format(f"{g.name} (`{g.id}`)" if (g := ctx.guild) else "None"))
+        # send some debug information to bot owner
+        tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
-            if log_c := self.bot.traceback_log:
-                await log_c.send(embed=e, content=f"```\n{tb[0:2000]}\n```")
+        e = discord.Embed(color=0xED4243, title="Exception", description=f"```\n{tb[0:3980]}\n```")
+        e.add_field(name="Command", value=f"{ctx.message.content[0:1000]}")
+        e.add_field(name="Author", value=f"{ctx.author} (`{ctx.author.id}`)")
+        e.add_field(name="Guild", value="{}".format(f"{g.name} (`{g.id}`)" if (g := ctx.guild) else "None"))
+
+        await self.bot.logger.send(
+            avatar_url="https://cdn.discordapp.com/embed/avatars/4.png",
+            username="Uncaught Exception",
+            embed=e,
+        )
 
 
 def setup(bot):
