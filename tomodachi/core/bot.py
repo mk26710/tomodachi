@@ -145,8 +145,9 @@ class Tomodachi(commands.AutoShardedBot):
         for guild in self.guilds:
             self.loop.create_task(self.db.store_guild(guild.id))
 
-        self.support_guild = support_guild = await self.fetch_guild(config.SUPPORT_GUILD_ID)
-        await i.setup(support_guild.emojis)
+        self.support_guild = await self.fetch_guild(config.SUPPORT_GUILD_ID)
+        emojis = await self.support_guild.fetch_emojis()
+        await i.setup(emojis)
 
     async def get_or_fetch_user(self, user_id: int) -> discord.User:
         """Retrives a discord.User object from cache or fetches it if not cached"""
