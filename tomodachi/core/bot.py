@@ -37,6 +37,7 @@ class Tomodachi(commands.AutoShardedBot):
             owner_ids=config.OWNER_IDS,
         )
         self._BotBase__cogs = commands.core._CaseInsensitiveDict()  # noqa
+
         self.session = session
         self.ROOT_DIR = root_dir
         self.config = config
@@ -50,7 +51,7 @@ class Tomodachi(commands.AutoShardedBot):
 
         # Faster access to support guild data
         self.support_guild: Optional[discord.Guild] = None
-        self.traceback_log: Optional[discord.TextChannel] = None
+        self.logger = discord.Webhook.from_url(config.LOGGER_HOOK, session=session)
 
         # Global rate limit cooldowns mapping
         self.rate_limits = commands.CooldownMapping.from_cooldown(10, 10, commands.BucketType.user)
@@ -145,9 +146,6 @@ class Tomodachi(commands.AutoShardedBot):
             self.loop.create_task(self.db.store_guild(guild.id))
 
         self.support_guild = support_guild = await self.fetch_guild(config.SUPPORT_GUILD_ID)
-        support_channels = await support_guild.fetch_channels()
-        self.traceback_log = discord.utils.get(support_channels, name="traceback")
-
         await i.setup(support_guild.emojis)
 
     async def get_or_fetch_user(self, user_id: int) -> discord.User:
