@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Union, Optional
+from typing import Union
 from contextlib import suppress
 
 import aiohttp
@@ -49,8 +49,6 @@ class Tomodachi(commands.AutoShardedBot):
         # list with user ids
         self.blacklist = []
 
-        # Faster access to support guild data
-        self.support_guild: Optional[discord.Guild] = None
         self.logger = discord.Webhook.from_url(config.LOGGER_HOOK, session=session)
 
         # Global rate limit cooldowns mapping
@@ -74,6 +72,10 @@ class Tomodachi(commands.AutoShardedBot):
         await self.db.disconnect()
         await self.cache.close()
         await super().close()
+
+    @property
+    def support_guild(self):
+        return self.get_guild(config.SUPPORT_GUILD_ID)
 
     async def get_prefix(self, message: discord.Message):
         settings = await self.cache.settings.get(message.guild.id)
@@ -145,7 +147,6 @@ class Tomodachi(commands.AutoShardedBot):
         for guild in self.guilds:
             self.loop.create_task(self.db.store_guild(guild.id))
 
-        self.support_guild = await self.fetch_guild(config.SUPPORT_GUILD_ID)
         emojis = await self.support_guild.fetch_emojis()
         await i.setup(emojis)
 
