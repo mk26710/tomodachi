@@ -20,17 +20,17 @@ if TYPE_CHECKING:
 
 
 class CachedSettings:
-    def __init__(self, parent: CacheProto) -> None:
+    def __init__(self, /, parent: CacheProto) -> None:
         self._parent = parent
 
     @asynccontextmanager
-    async def fresh(self, guild_id: int):
+    async def fresh(self, /, guild_id: int):
         try:
             yield None
         finally:
             await self.refresh(guild_id)
 
-    async def refresh(self, guild_id: int):
+    async def refresh(self, /, guild_id: int):
         async with self._parent.bot.db.pool.acquire() as conn:
             query = """select
                 g.guild_id,
@@ -51,7 +51,7 @@ class CachedSettings:
         dump = orjson.dumps(dict(record))
         await self._parent.redis.setex(f"MS-{guild_id}", 43200, dump)
 
-    async def get(self, guild_id: int, *, refresh: bool = True):
+    async def get(self, /, guild_id: int, refresh: bool = True):
         data = await self._parent.redis.get(f"MS-{guild_id}")
         if not data:
             if not refresh:
@@ -64,13 +64,13 @@ class CachedSettings:
 
 
 class Cache(CacheProto):
-    def __init__(self, bot: Tomodachi) -> None:
+    def __init__(self, /, bot: Tomodachi) -> None:
         self.bot = bot
         self.pool = aioredis.ConnectionPool.from_url(bot.config.REDIS_URI, decode_responses=True)
         self.redis = aioredis.Redis(connection_pool=self.pool)
         self.settings = CachedSettings(self)
 
-    async def refresh_by_guild(self, guild_id: int):
+    async def refresh_by_guild(self, /, guild_id: int):
         await self.settings.refresh(guild_id)
 
     async def close(self):
