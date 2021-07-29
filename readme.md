@@ -1,11 +1,3 @@
-[![GitHub license](https://img.shields.io/github/license/howaitoreivun/tomodachi)](https://github.com/howaitoreivun/tomodachi/blob/rewrite/LICENSE) ![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)
+Due to major changes that will happen to Discord API in April of 2022, this bot is archived. You can learn more [here](https://support-dev.discord.com/hc/en-us/articles/4404772028055).
 
-# Tomodachi Bot
-
-It can do some things ¯\\\_(ツ)_/¯
-
-## Requirements
-
- - PostgreSQL >= 12
- - Redis >= 6.2.4
- - Python >= 3.9
+It was a good experience, quite sad to see this happening.
