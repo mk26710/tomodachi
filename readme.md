@@ -2,4 +2,3 @@ Due to major changes that will happen to Discord API in April of 2022, this bot 
 
 It was a good experience, quite sad to see this happening.
 
-UPD: from what I've heard bots will be able to get content if you mention them in the message, might give it a try once again 🤔
